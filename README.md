@@ -25,7 +25,7 @@ Aktuelle werden folgende Werte angezeigt
 
 ![Stromerzeugung](/examples/Stromerzeugung.png)
 
-Aktuell könne folgende Modi eingestellt/umgestellt bzw. angezeigt werden
+Aktuell können folgende Modi eingestellt/umgestellt bzw. angezeigt werden
 
 1. Lademodus (gleichzeitiges laden/entladen vs. vollständig laden und dann entladen)
 2. Entlademodus (auto/manuell)
@@ -35,7 +35,7 @@ Aktuell könne folgende Modi eingestellt/umgestellt bzw. angezeigt werden
 ## Installation
 
 ### Abhängigkeiten
-Damit die B2500d-Card korrekt funktioniert, müssen folgende Integrationen installiert sein:
+Damit die b2500d-card korrekt funktioniert, müssen folgende Integrationen installiert sein:
 
 - [hm2mqtt by tomquist](https://github.com/tomquist/hm2mqtt)
 
