@@ -10,14 +10,27 @@ Angelehnt an der Marstek App, zeigt diese Custom Card die Werte deines B2500d Sp
 Aktuelle werden folgende Werte angezeigt 
 
 1. Aktuelle Solarenergie gesamt und Eingang 1 & Eingang 2
+   
+![Solarenergie](/examples/Solarenergie.png)
+
 2. Aktuelle Ausgangsleistung gesamt
+
+![Ausgangsleistung](/examples/Ausgang.png)
+
 3. Batterie Ladestand / Kapazität
+
+![Batterie](/examples/Batterie.png)
+
 4. Tages Stromerzeugung
+
+![Stromerzeugung](/examples/Stromerzeugung.png)
 
 Aktuell könne folgende Modi eingestellt/umgestellt bzw. angezeigt werden
 
 1. Lademodus (gleichzeitiges laden/entladen vs. vollständig laden und dann entladen)
 2. Entlademodus (auto/manuell)
+
+![Modus](/examples/Modus.png)
 
 ## Installation
 
