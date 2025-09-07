@@ -3,8 +3,4 @@
   "content_in_root": true,
   "filename": "b2500d-card.js",
   "zip_release": false,
-  "hacs_type": "plugin",
-  "description": "Eine Lovelace Custom Card für den Marstek B2500d",
-  "keywords": ["lovelace", "card", "frontend", "marstek", "b2500d"],
-  "version": "1.0.0"
 }
