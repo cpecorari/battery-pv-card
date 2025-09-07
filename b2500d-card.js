@@ -202,7 +202,7 @@ class B2500DCard extends LitElement {
           <article class="card solar">
             <div class="title">
               ☀️ <span>Solarenergie</span>
-              <div class="right-big">${this._solarPower}w</div>
+              <div class="right-big">${this._solarPower}W</div>
             </div>
             <div class="barwrap">
               <div class="bar p1"><div class="fill" style="width:${p1Pct}%"></div></div>
@@ -218,7 +218,7 @@ class B2500DCard extends LitElement {
           <article class="card">
             <div class="title">⚡️︎ Ausgang</div>
             <div class="subtitle">Echtzeitleistung</div>
-            <div class="big-num">${this._outputPower}w</div>
+            <div class="big-num">${this._outputPower}W</div>
           </article>
 
           <!-- Battery -->
@@ -301,3 +301,4 @@ class B2500DCard extends LitElement {
 }
 
 customElements.define("b2500d-card", B2500DCard);
+
