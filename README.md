@@ -2,7 +2,7 @@
 
 Eine Lovelace Custom Card für den Marstek B2500d Speicher.
 
-![Beispielcard](Screenshot.png)
+![Beispielcard](/examples/Screenshot.png)
 
 ## Features
 Angelehnt an der Marstek App, zeigt diese Custom Card die Werte deines B2500d Speichers an.
