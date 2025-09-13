@@ -1,3 +1,7 @@
+[![hacs][hacs-default]][hacs-default-link] [![hacs][hacs-validate]][hacs-validate-link]
+
+
+
 # B2500D-Card | Die Solarspeicher-Karte
 
 Eine Home Assistand Custom Card für den Marstek B2500d Speicher.
@@ -222,4 +226,8 @@ Die Konfiguration kann auch mit dem Built-In-Form-Editor (visueller Editor) vorg
 ![visueller Editor](./examples/visueller_Editor.png)
 
 
-
+<!--BADGES-->
+[hacs-default]: https://img.shields.io/badge/HACS-Default-blue?style=flat&logo=homeassistantcommunitystore&logoSize=auto
+[hacs-default-link]: https://my.home-assistant.io/redirect/hacs_repository/?owner=Neisi&repository=b2500d-card&category=plugin
+[hacs-validate]: https://github.com/ngocjohn/lunar-phase-card/actions/workflows/validate.yaml/badge.svg
+[hacs-validate-link]: https://github.com/Neisi/b2500d-card/actions/workflows/validate.yaml
