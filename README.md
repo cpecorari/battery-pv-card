@@ -13,7 +13,7 @@ Da man aber auch einzelne Entitäten und Optionen angeben kann, eignet sich dies
 ![Beispielcard2](./examples/Kompakt.png)
 
 ## 🚀 Features
-Angelehnt an die Marstek App, zeigt diese Custom Card die Werte deines B2500d Speichers an.
+Angelehnt an die Marstek App, zeigt diese Custom Card die Werte deines B2500d Speichers oder optional, wenn entsprechende Entitäten zur Verfügung stehen auch die Werte jedes anderen Speichers an.
 
 ### 💡 Status Visualisierung
 
@@ -220,5 +220,6 @@ name: Mein Speicher
 Die Konfiguration kann auch mit dem Built-In-Form-Editor (visueller Editor) vorgenommen werden.
 
 ![visueller Editor](./examples/visueller_Editor.png)
+
 
 
