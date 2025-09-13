@@ -1,0 +1,30 @@
+name: Check customElements.define
+
+on:
+  push:
+    paths:
+      - "b2500d-card.js"
+  pull_request:
+    paths:
+      - "b2500d-card.js"
+
+jobs:
+  check-define:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify customElements.define
+        run: |
+          if grep -q 'customElements.define("b2500d-card-test", B2500DCard);' b2500d-card.js; then
+            echo "❌ Found forbidden -test definition in b2500d-card.js"
+            exit 1
+          fi
+
+          if ! grep -q 'customElements.define("b2500d-card", B2500DCard);' b2500d-card.js; then
+            echo "❌ Missing required customElements.define(\"b2500d-card\", B2500DCard);"
+            exit 1
+          fi
+
+          echo "✅ customElements.define is correct"
