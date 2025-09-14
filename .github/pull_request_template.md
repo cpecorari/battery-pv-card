@@ -1,3 +1,9 @@
+<!-- Bitte PR-Titel nach folgendem Muster schreiben:
+Fix: kurze Beschreibung
+Add: neues Feature
+Docs: Doku aktualisiert
+-->
+
 ## ✨ Beschreibung
 <!-- Kurze, prägnante Zusammenfassung der Änderung -->
 
