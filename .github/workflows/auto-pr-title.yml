@@ -1,0 +1,58 @@
+name: Auto PR Title + Label
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  set-title-and-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set PR title and label based on branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = context.payload.pull_request.head.ref;
+
+            // Mapping Branch → Prefix & Label
+            const mapping = {
+              "feature":     { prefix: "Feature",      label: "feature" },
+              "enhancement": { prefix: "Enhancement",  label: "enhancement" },
+              "bug":         { prefix: "Fix",          label: "bug" },
+              "documentation": { prefix: "Docs",       label: "documentation" },
+              "refactor":    { prefix: "Refactor",     label: "refactor" },
+              "chore":       { prefix: "Chore",        label: "chore" }
+            };
+
+            // Bestimme Prefix & Label anhand Branch
+            let prefix = "Chore";
+            let label = "chore";
+            const parts = branch.split("/");
+            if (parts.length > 1) {
+              const key = parts[0].toLowerCase();
+              if (mapping[key]) {
+                prefix = mapping[key].prefix;
+                label = mapping[key].label;
+              }
+            }
+
+            // Titel generieren: Prefix + Rest vom Branch
+            const rest = parts.slice(1).join("/") || branch;
+            const newTitle = `${prefix}: ${rest.replace(/-/g, " ")}`;
+
+            // PR Titel aktualisieren
+            await github.rest.pulls.update({
+              ...context.repo,
+              pull_number: context.payload.pull_request.number,
+              title: newTitle
+            });
+
+            // Label setzen
+            await github.rest.issues.addLabels({
+              ...context.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: [label]
+            });
+
+            core.info(`PR title set to: ${newTitle}`);
+            core.info(`PR labeled with: ${label}`);
