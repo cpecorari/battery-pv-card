@@ -1,3 +1,4 @@
+
 import { LitElement, html, css } from "https://unpkg.com/lit-element/lit-element.js?module";
 import en from "./localize/en.js";
 import de from "./localize/de.js";
@@ -76,7 +77,7 @@ class B2500DCard extends LitElement {
         width: 10px;
         height: 80px;
         border-radius: 6px;
-        border: 1px solid var(--ha-card-background, var(--card-background-color, #fff));
+        border: 1px solid #000;
         background: rgb(28, 28, 28);
         position:relative;
         overflow:hidden;
@@ -137,7 +138,7 @@ class B2500DCard extends LitElement {
 
         .card {
           position: relative; 
-          background: var(--ha-card-background,var(--card-background-color,#fff));
+          background: rgba(100,100,100, 0.15);
           border-radius: var(--radius);
           padding:12px;
           box-sizing:border-box;
@@ -148,7 +149,7 @@ class B2500DCard extends LitElement {
           bottom: 14px;   
           right: 14px;   
           font-size: 22px; 
-          color: white; 
+          color:var(--text);
           font-weight: 700;
         }
         
@@ -163,16 +164,22 @@ class B2500DCard extends LitElement {
       .card.flat{ box-shadow:none; padding:0; overflow:hidden }
 
       .title {
-        display:flex; align-items: baseline; gap:1px;
-        font-weight:600; color:var(--text);
+        display:flex; 
+        align-items: 
+        baseline; gap:1px;
+        font-weight:600; 
+        color:var(--text);
         font-size: var(--ha-font-size-l)
       }
 
       .right-big {
-        margin-left:auto; font-weight:400; font-size:24px; color: white;
+        margin-left:auto; 
+        font-weight:400; 
+        font-size:24px; 
+        color:var(--text);
       }
 
-      .big-num{ font-size:24px; color: white; font-weight:400; }
+      .big-num{ font-size:24px; color:var(--text); font-weight:400; }
       .muted{ color:var(--muted) }
       .subtitle{ color:var(--muted); font-size:13px; margin-top:15px }
       
@@ -180,6 +187,10 @@ class B2500DCard extends LitElement {
           font-size:14px;
           font-weight:400;
           margin-left: 1px;
+          color: var(--primary-text-color);
+      }
+      .big-num-unit.white {
+        color: white;
       }
 
       .flex-wrapper{
@@ -255,8 +266,15 @@ class B2500DCard extends LitElement {
           animation: pulseGreen 2.5s infinite ease-in-out;
         }
 
-      .kwh{ font-size:28px; font-weight:400; color: white; }
-      .percent{ color:var(--muted); margin-top:2px; font-weight:400; font-size: var(--ha-font-size-l) }
+     .kwh{ font-size:28px; font-weight:400; color: white; }
+
+      .percent{ 
+      color: white;
+      margin-top:2px; 
+      font-weight:400; 
+      font-size: var(--ha-font-size-l) 
+          
+      }
 
       .row{
         display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -333,7 +351,6 @@ class B2500DCard extends LitElement {
       .compact ha-icon {
         scale: 0.7;
         margin-right: 1px;
-        color: white;
       }
       
       .compact .flex{
@@ -358,7 +375,6 @@ class B2500DCard extends LitElement {
   setConfig(config) {
     const { device, entities } = config;
 
-    // Prüfen: entweder device oder entities, aber nicht beides
     if (device && entities) {
       throw new Error(localize("errors.both", this._hass?.language));
     }
@@ -465,20 +481,16 @@ class B2500DCard extends LitElement {
     if (this.config.compact) {
       const percent = this._batteryPercent ?? 0;
 
-      // Farbe bestimmen
       let color = "green";
       if (percent <= 19) {
         color = "red";
       } else if (percent <= 59) {
         color = "orange";
       }
-      // Icon abhängig vom Prozentwert wählen (auf nächste 10 abrunden)
       let icon = "";
       if (percent >= 100) {
-        // Sonderfall: 100% hat eigenes Icon
         icon = "mdi:battery";
       } else if (percent < 10) {
-        // Unter 10% gibt es nur die Outline-Version
         icon = "mdi:battery-outline";
       } else {
         let level = Math.floor(percent / 10) * 10;
@@ -624,7 +636,7 @@ class B2500DCard extends LitElement {
                         ">
                         <div class="flex-wrapper">
                           <div class="kwh">${Number(this._batteryKwh).toFixed(2)}</div>
-                          <div class="big-num-unit">kWh</div>
+                          <div class="big-num-unit white">kWh</div>
                         </div>
                         <div class="percent">${this._batteryPercent}%</div>
                       </div>
@@ -736,7 +748,6 @@ class B2500DCardEditor extends LitElement {
 
 
   setConfig(config) {
-    // Defaults behalten, damit Felder sichtbar sind
     this._config = {
       output: true,
       battery: true,
@@ -767,7 +778,6 @@ class B2500DCardEditor extends LitElement {
 
     const newConfig = { ...ev.detail.value };
 
-    // Wenn entities leer oder alle Werte leer, entfernen
     if (newConfig.entities) {
       const isEmpty = Object.values(newConfig.entities).every(
         (v) => v === null || v === undefined || v === ""
@@ -846,4 +856,3 @@ class B2500DCardEditor extends LitElement {
 
 
 customElements.define("b2500d-card-editor", B2500DCardEditor);
-
