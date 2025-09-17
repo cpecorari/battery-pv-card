@@ -497,7 +497,7 @@ class B2500DCard extends LitElement {
         icon = `mdi:battery-${level}`;
       }
       return html`
-        <div class="compact">
+        <div class="compact" @click=${() => this._handleMoreInfo(this._getEntity("battery_percentage"))}>
         <div class="device">
           <div class="unit">
             <div class="battery-bar">
@@ -856,3 +856,4 @@ class B2500DCardEditor extends LitElement {
 
 
 customElements.define("b2500d-card-editor", B2500DCardEditor);
+
