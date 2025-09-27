@@ -20,5 +20,5 @@ Docs: documentation updated
 ## 📸 Screenshots (optional)
 
 ## 🚨 Breaking Changes
-- [ ] Ja
-- [ ] Nein
+- [ ] Yes
+- [ ] No
