@@ -4,8 +4,9 @@ import en from "./localize/en.js";
 import de from "./localize/de.js";
 import es from "./localize/es.js";
 import fr from "./localize/fr.js";
+import nl from "./localize/nl.js";
 
-const languages = { en, de, es, fr };
+const languages = { en, de, es, fr, nl };
 
 
 function _getLangCode(langInput) {
@@ -1058,4 +1059,5 @@ window.customCards.push({
    name: "Solar Storage Card",
    preview: false,
    description: "Visualizing solar storage systems",
+
 });
