@@ -1,19 +1,20 @@
-<!-- Bitte PR-Titel nach folgendem Muster schreiben:
-Fix: kurze Beschreibung
-Add: neues Feature
-Docs: Doku aktualisiert
+<!-- 
+Please write the PR title using the following pattern:
+Fix: short descriptio
+nAdd: new feature
+Docs: documentation updated
 -->
 
-## ✨ Beschreibung
-<!-- Kurze, prägnante Zusammenfassung der Änderung -->
+## ✨ Description
+<!-- Short, concise summary of the change -->
 
 ## 🐞 Ticket / Issue
-<!-- Referenz auf Issue, falls vorhanden -->
+<!-- Reference to issue, if available -->
 
-## 🔍 Motivation & Kontext
-<!-- Warum war die Änderung nötig? -->
+## 🔍 Motivation
+<!-- Why was the change necessary? -->
 
-## ✅ Änderungen
+## ✅ Changes
 - ...
 
 ## 📸 Screenshots (optional)
