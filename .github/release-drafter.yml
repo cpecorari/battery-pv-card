@@ -11,12 +11,13 @@ categories:
     labels: ["refactor"]
   - title: "🔧 Maintenance"
     labels: ["chore"]
+  - title: "📝 Other Changes"
+    labels: []
 
 change-template: "- $TITLE (#$NUMBER)"
 
 template: |
   ## 📦 Release $RESOLVED_VERSION
 
-  ### Änderungen seit dem letzten Release
-
+  ## Changes
   $CHANGES
