@@ -419,103 +419,156 @@ class B2500DCard extends LitElement {
         border-style: solid;
         border-color: var(--ha-card-border-color, var(--divider-color, #e0e0e0));
         color: var(--primary-text-color);
+        padding: 12px 16px;
+        gap: 12px;
       }
 
-      .compact .unit {
-        transform: scale(0.7);
-        transform-origin: center;
+      /* Gauges Section on Left */
+      .gauges-section {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .battery-section,
+      .solar-section,
+      .house-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 70px;
+      }
+
+      .gauge-wrapper {
         position: relative;
+        width: 70px;
+        height: 70px;
+        isolation: isolate;
       }
 
-      .compact-power-top {
+      .gauge-wrapper::before,
+      .gauge-wrapper::after {
+        display: none !important;
+      }
+
+      .gauge-svg {
+        transform: rotate(-90deg);
+        width: 100%;
+        height: 100%;
+        position: relative;
+        z-index: 1;
+        overflow: visible;
+      }
+
+      .gauge-bg {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.1);
+        stroke-width: 8;
+      }
+
+      .gauge-fill {
+        fill: none;
+        stroke-width: 8;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.5s ease, stroke 0.5s ease;
+        filter: none !important;
+      }
+
+      .gauge-center {
         position: absolute;
-        top: 2px;
-        left: 30%;
-        transform: translateX(-23%) scale(1.4);
-        color: white;
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .compact-power-top p {
-        margin: 0;
-      }
-
-      .compact-battery-bottom {
-        position: absolute;
-        top: 83%;
+        top: 50%;
         left: 50%;
-        transform: translateX(-50%) scale(1.3);
+        transform: translate(-50%, -50%);
+        text-align: center;
+        z-index: 2;
+      }
+
+      .gauge-value {
         color: white;
-        z-index: 10;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1;
+      }
+
+      .gauge-unit {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 10px;
+        margin-top: 2px;
+      }
+
+      .gauge-percentage {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 9px;
+      }
+
+      .gauge-label {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 10px;
+        margin-top: 4px;
+        font-weight: 500;
         display: flex;
+        flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: 2px;
+        gap: 4px;
       }
 
-      .compact-battery-bottom p {
-        margin: 0;
-      }
-
-      .compact-battery-bottom ha-icon {
-        font-size: 12px;
-      }
-
-      .compact .device {
-        margin-left: 3px;
-        padding: 0 0 0 0;
-      }
-
+      /* Right Section */
       .compact .right {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        margin-left: 8px;
+        gap: 6px;
         flex: 1;
       }
 
-      .compact .name {
+      .compact .card-name {
         font-weight: 600;
-        font-size: 16px;
-        color: var(--text);
-        margin: 4px 0;
-        text-align: left;
+        font-size: 15px;
+        color: white;
         order: 2;
       }
 
-      .compact .val {
+      .compact .info-row {
         display: flex;
-        align-items: center;
-        font-weight: 400;
-        color: var(--text);
-        font-size: 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        width: 100%;
       }
 
-      .compact .right > .val:first-child {
+      .compact .info-row.flex-row:first-of-type {
         order: 1;
       }
 
-      .compact .flex {
+      .compact .info-row.flex-row:last-of-type {
         order: 3;
-        display: flex;
-        gap: 8px;
       }
 
-      .compact ha-icon[icon^='mdi:battery'] {
-        transform: rotate(90deg);
+      .compact .info-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
       }
 
       .compact ha-icon {
-        scale: 1;
-        margin-right: 1px;
+        --mdc-icon-size: 18px;
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        margin-right: 6px;
       }
 
-      .compact .flex {
-        display: flex;
-        gap: 8px;
+      .compact .info-item ha-icon {
+        position: static;
+        display: inline-block;
+      }
+
+      .compact .value {
+        font-weight: 500;
+        white-space: nowrap;
       }
 
       .compact p {
@@ -632,6 +685,18 @@ class B2500DCard extends LitElement {
       this._batteryPower = e.battery_power ? Number(this._hass.states[e.battery_power]?.state) || 0 : 0;
       this._batteryCharging = e.storage_status ? Number(this._hass.states[e.storage_status]?.state) || 0 : undefined; // Enum : 0 idle, 1 charging, 2 discharging
 
+      // Optional battery_status entity to normalize power sign
+      if (e.battery_status) {
+        const batteryStatus = this._hass.states[e.battery_status]?.state?.toLowerCase();
+        const absPower = Math.abs(this._batteryPower);
+        if (batteryStatus === 'charging') {
+          this._batteryPower = +absPower; // Positive for charging
+        } else if (batteryStatus === 'discharging') {
+          this._batteryPower = -absPower; // Negative for discharging
+        }
+        // If 'idle' or other, keep as-is
+      }
+
       this._batteryKwh = e.battery_capacity ? getNumericValue(e.battery_capacity) : 0;
       this._productionToday = e.production_today ? getNumericValue(e.production_today) : 0;
       this._lastUpdate = this._formatLastUpdate(this._hass.states[e.last_update]?.state) || 'n/a';
@@ -734,113 +799,264 @@ class B2500DCard extends LitElement {
   //RENDER COMPACT
   _renderCompact(batteryClass) {
     const percent = this._batteryPercent ?? 0;
+    const radius = 47;
+    const circumference = 2 * Math.PI * radius;
+    const innerRadius = 39;
+    const innerCircumference = 2 * Math.PI * innerRadius;
 
-    let color = '#00b312ff'; // Cyan par défaut
-    if (percent <= 10) {
-      color = '#c91b1bff'; // Rouge
-    } else if (percent <= 25) {
-      color = '#e1a224ff';
-    }
-
-    let colorSolar = this._solarPower > 0 ? 'yellow' : 'grey';
-    let colorGrid = this._gridPower > 0 ? 'red' : this._gridPower < 0 ? 'green' : 'white';
-    let colorHouse =
-      this._housePower > this._solarPower
-        ? this._housePower > 1000
-          ? 'red'
-          : this._housePower > 600
-          ? 'orange'
-          : 'green'
-        : 'white';
-
-    let icon = '';
-    if (percent >= 100) {
-      icon = 'mdi:battery';
-    } else if (percent < 10) {
-      icon = 'mdi:battery-outline';
-    } else {
-      let level = Math.floor(percent / 10) * 10;
-      icon = `mdi:battery-${level}`;
-    }
-
-    // Déterminer la couleur et le texte pour l'indicateur de puissance
-    let powerColor = 'white';
-    let powerText = '';
-
-    if (this._batteryPower !== undefined && this._batteryPower !== 0) {
-      const powerFormat = this._formatPowerWithUnit(Math.abs(this._batteryPower));
-      if (this._batteryPower < 0) {
-        powerColor = '#00fb00'; // Vert pour la charge
-        powerText = `+${powerFormat.value} ${powerFormat.unit}`;
+    // Helper function to format gauge display
+    const formatGaugeValue = (power) => {
+      const absPower = Math.abs(power);
+      if (absPower < 1000) {
+        return { value: Math.round(absPower), unit: 'W' };
       } else {
-        powerColor = '#fba500'; // Orange pour la décharge
-        powerText = `-${powerFormat.value} ${powerFormat.unit}`;
+        return { value: (absPower / 1000).toFixed(1), unit: 'kW' };
       }
+    };
+
+    // Battery gauge calculations
+    const batteryOffset = circumference - (percent / 100) * circumference;
+    const batteryDisplay = formatGaugeValue(this._batteryPower);
+
+    // Determine battery color
+    let batteryColor, batteryGradient;
+    if (this._batteryPower > 50) {
+      // Charging - use gradient
+      batteryGradient = true;
+      batteryColor = 'url(#charging-gradient)';
+    } else if (this._batteryPower < -50) {
+      // Discharging
+      batteryColor = '#fb923c';
     } else {
-      powerText = '0 W';
-      powerColor = 'grey';
+      // Idle
+      batteryColor = '#6b7280';
     }
+
+    // Solar gauge calculations
+    const solarMaxPower = 4500;
+    const solarPercentage = Math.min((this._solarPower / solarMaxPower) * 100, 100);
+    const solarOffset = circumference - (solarPercentage / 100) * circumference;
+    const solarDisplay = formatGaugeValue(this._solarPower);
+
+    // House gauge calculations - total and contributions
+    const maxHouseLoad = 6000;
+    const houseDisplay = formatGaugeValue(this._housePower);
+
+    // Calculate contributions
+    let solarToHouse = 0;
+    let batteryToHouse = 0;
+    let gridToHouse = 0;
+
+    if (this._solarPower > 0) {
+      solarToHouse = Math.min(this._solarPower, this._housePower);
+    }
+
+    const remainingAfterSolar = this._housePower - solarToHouse;
+    if (remainingAfterSolar > 0 && this._batteryPower < 0) {
+      batteryToHouse = Math.min(Math.abs(this._batteryPower), remainingAfterSolar);
+    }
+
+    const remainingAfterBattery = remainingAfterSolar - batteryToHouse;
+    if (remainingAfterBattery > 0) {
+      gridToHouse = remainingAfterBattery;
+    }
+
+    const totalPercentage = Math.min((this._housePower / maxHouseLoad) * 100, 100);
+    const totalArcLength = (totalPercentage / 100) * circumference;
+
+    const solarPercentageHouse = (solarToHouse / maxHouseLoad) * 100;
+    const batteryPercentageHouse = (batteryToHouse / maxHouseLoad) * 100;
+    const solarArcLength = (solarPercentageHouse / 100) * innerCircumference;
+    const batteryArcLength = (batteryPercentageHouse / 100) * innerCircumference;
 
     return html`
       <div class="compact">
-        <div class="device">
-          <div class="unit">
-            <div class="battery-bar">
-              <div class="battery-fill ${batteryClass}" style="height:${Math.min(this._batteryPercent, 98)}%"></div>
+        <!-- Gauges Section -->
+        <div class="gauges-section">
+          <!-- Battery Gauge -->
+          <div class="battery-section">
+            <div class="gauge-wrapper">
+              <svg class="gauge-svg" viewBox="0 0 100 100">
+                ${batteryGradient
+                  ? html`
+                      <defs>
+                        <linearGradient id="charging-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                          <stop offset="50%" style="stop-color:#34d399;stop-opacity:1" />
+                          <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+                        </linearGradient>
+                      </defs>
+                    `
+                  : ''}
+                <circle class="gauge-bg" cx="50" cy="50" r="47"></circle>
+                <circle
+                  class="gauge-fill"
+                  cx="50"
+                  cy="50"
+                  r="47"
+                  style="stroke: ${batteryColor}; stroke-dasharray: ${circumference} ${circumference}; stroke-dashoffset: ${batteryOffset};"
+                ></circle>
+              </svg>
+              <div class="gauge-center">
+                <div class="gauge-value">${batteryDisplay.value}</div>
+                <div class="gauge-unit">${batteryDisplay.unit}</div>
+              </div>
             </div>
-            <!-- Indicateur de puissance en haut -->
-            <div class="val compact-power-top">
-              <p style="color: ${powerColor};">${powerText}</p>
+            <div class="gauge-label">
+              <div>Battery</div>
+              <div class="gauge-percentage">${percent}%</div>
             </div>
-            <!-- Pourcentage et icône batterie en bas -->
-            <div class="val compact-battery-bottom">
-              <p style="color:${color}; font-weight: 500">${this._batteryPercent}%</p>
+          </div>
+
+          <!-- Solar Gauge -->
+          <div class="solar-section">
+            <div class="gauge-wrapper">
+              <svg class="gauge-svg" viewBox="0 0 100 100">
+                <defs>
+                  <linearGradient id="solar-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color: #6b7280; stop-opacity: 1" />
+                    <stop offset="10%" style="stop-color: #fef3c7; stop-opacity: 1" />
+                    <stop offset="25%" style="stop-color: #fbbf24; stop-opacity: 1" />
+                    <stop offset="50%" style="stop-color: #f59e0b; stop-opacity: 1" />
+                    <stop offset="75%" style="stop-color: #f87171; stop-opacity: 1" />
+                    <stop offset="100%" style="stop-color: #dc2626; stop-opacity: 1" />
+                  </linearGradient>
+                </defs>
+                <circle class="gauge-bg" cx="50" cy="50" r="47"></circle>
+                <circle
+                  class="gauge-fill"
+                  cx="50"
+                  cy="50"
+                  r="47"
+                  style="stroke: url(#solar-gradient); stroke-dasharray: ${circumference} ${circumference}; stroke-dashoffset: ${solarOffset};"
+                ></circle>
+              </svg>
+              <div class="gauge-center">
+                <div class="gauge-value">${solarDisplay.value}</div>
+                <div class="gauge-unit">${solarDisplay.unit}</div>
+              </div>
             </div>
+            <div class="gauge-label">Solar</div>
+          </div>
+
+          <!-- House Load Gauge -->
+          <div class="house-section">
+            <div class="gauge-wrapper">
+              <svg class="gauge-svg" viewBox="0 0 100 100">
+                <defs>
+                  <linearGradient id="house-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color: #fb923c; stop-opacity: 1" />
+                    <stop offset="50%" style="stop-color: #f97316; stop-opacity: 1" />
+                    <stop offset="100%" style="stop-color: #dc2626; stop-opacity: 1" />
+                  </linearGradient>
+                </defs>
+                <!-- Background circles -->
+                <circle class="gauge-bg" cx="50" cy="50" r="47"></circle>
+                <circle class="gauge-bg" cx="50" cy="50" r="39"></circle>
+                <!-- Outer circle: total house load -->
+                <circle
+                  class="gauge-fill"
+                  cx="50"
+                  cy="50"
+                  r="47"
+                  style="stroke: url(#house-gradient); stroke-dasharray: ${totalArcLength} ${circumference}; stroke-dashoffset: 0;"
+                ></circle>
+                <!-- Inner circle: solar contribution -->
+                <circle
+                  class="gauge-fill"
+                  cx="50"
+                  cy="50"
+                  r="39"
+                  style="stroke: #fbbf24; stroke-dasharray: ${solarArcLength} ${innerCircumference}; stroke-dashoffset: 0; visibility: ${solarToHouse >
+                  0
+                    ? 'visible'
+                    : 'hidden'};"
+                ></circle>
+                <!-- Inner circle: battery contribution -->
+                <circle
+                  class="gauge-fill"
+                  cx="50"
+                  cy="50"
+                  r="39"
+                  style="stroke: #10b981; stroke-dasharray: ${batteryArcLength} ${innerCircumference}; stroke-dashoffset: ${-solarArcLength}; visibility: ${batteryToHouse >
+                  0
+                    ? 'visible'
+                    : 'hidden'};"
+                ></circle>
+              </svg>
+              <div class="gauge-center">
+                <div class="gauge-value">${houseDisplay.value}</div>
+                <div class="gauge-unit">${houseDisplay.unit}</div>
+              </div>
+            </div>
+            <div class="gauge-label">House</div>
           </div>
         </div>
 
+        <!-- Right Section -->
         <div class="right">
-          <!-- Solaire en premier -->
-          <div
-            class="val"
-            @click=${() => {
-              const entityId = this._getEntity('solar_power');
-              if (entityId) this._handleMoreInfo(entityId);
-            }}
-          >
-            <ha-icon icon="mdi:weather-sunny" style="color:${colorSolar}"></ha-icon>
-            <p>
-              ${this._formatPowerWithUnit(this._solarPower).value} ${this._formatPowerWithUnit(this._solarPower).unit}
-            </p>
-          </div>
-          <!-- Nom de la carte -->
-          <div class="name">${this.config.name || this.config.device}</div>
-          <div class="flex">
-            <!-- Maison -->
+          <!-- Solar and Battery (first row) -->
+          <div class="info-row flex-row">
             <div
-              class="val"
+              class="info-item"
+              @click=${() => {
+                const entityId = this._getEntity('solar_power');
+                if (entityId) this._handleMoreInfo(entityId);
+              }}
+            >
+              <ha-icon icon="mdi:weather-sunny" style="color: #fbbf24"></ha-icon>
+              <span class="value"
+                >${this._formatPowerWithUnit(this._solarPower).value}
+                ${this._formatPowerWithUnit(this._solarPower).unit}</span
+              >
+            </div>
+
+            <div
+              class="info-item"
+              @click=${() => {
+                const entityId = this._getEntity('battery_power');
+                if (entityId) this._handleMoreInfo(entityId);
+              }}
+            >
+              <ha-icon icon="mdi:battery" style="color: #60a5fa"></ha-icon>
+              <span class="value"
+                >${this._formatPowerWithUnit(this._batteryPower).value}
+                ${this._formatPowerWithUnit(this._batteryPower).unit}</span
+              >
+            </div>
+          </div>
+
+          <!-- Card Name -->
+          <div class="card-name">${this.config.name || this.config.device}</div>
+
+          <!-- House and Grid -->
+          <div class="info-row flex-row">
+            <div
+              class="info-item"
               @click=${() => {
                 const entityId = this._getEntity('house_power');
                 if (entityId) this._handleMoreInfo(entityId);
               }}
             >
-              <ha-icon icon="mdi:home-lightning-bolt-outline" style="color:${colorHouse}"></ha-icon>
-              <p>
-                ${this._formatPowerWithUnit(this._housePower).value} ${this._formatPowerWithUnit(this._housePower).unit}
-              </p>
+              <ha-icon icon="mdi:home-lightning-bolt-outline" style="color: #10b981"></ha-icon>
+              <span class="value"
+                >${this._formatPowerWithUnit(this._housePower).value}
+                ${this._formatPowerWithUnit(this._housePower).unit}</span
+              >
             </div>
-            <!-- Réseau -->
+
             <div
-              class="val"
+              class="info-item"
               @click=${() => {
                 const entityId = this._getEntity('grid_power');
                 if (entityId) this._handleMoreInfo(entityId);
               }}
             >
-              <ha-icon icon="mdi:transmission-tower" style="color:${colorGrid}"></ha-icon>
-              <p>
-                ${this._formatPowerWithUnit(this._gridPower).value} ${this._formatPowerWithUnit(this._gridPower).unit}
-              </p>
+              <ha-icon icon="mdi:transmission-tower" style="color: #ef4444"></ha-icon>
+              <span class="value"
+                >${this._formatPowerWithUnit(this._gridPower).value}
+                ${this._formatPowerWithUnit(this._gridPower).unit}</span
+              >
             </div>
           </div>
         </div>
@@ -1321,6 +1537,7 @@ class B2500DCardEditor extends LitElement {
       entities: {
         battery_percentage: '',
         battery_capacity: '',
+        battery_status: '',
         solar_power: '',
         p1_power: '',
         p2_power: '',
