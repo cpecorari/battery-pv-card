@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Battery PV Card - Simple Test</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" />
+    <style>
+      body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f5f5f5;
+        padding: 20px;
+        margin: 0;
+        --primary-text-color: #333;
+        --ha-card-background: #fff;
+        --ha-card-border-radius: 12px;
+        --divider-color: #e0e0e0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+      }
+      h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+      }
+      .controls {
+        text-align: center;
+        margin: 20px 0;
+      }
+      button {
+        background: #007acc;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 6px;
+        margin: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background: #005999;
+      }
+      .scenario-title {
+        text-align: center;
+        font-weight: 600;
+        color: #007acc;
+        margin: 16px 0;
+        background: white;
+        padding: 12px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+
+    <!-- Mock ha-icon component -->
+    <script>
+      class HaIcon extends HTMLElement {
+        static get observedAttributes() {
+          return ['icon'];
+        }
+
+        connectedCallback() {
+          this.render();
+        }
+
+        attributeChangedCallback() {
+          this.render();
+        }
+
+        render() {
+          const icon = this.getAttribute('icon');
+          if (icon) {
+            const iconClass = icon.replace('mdi:', 'mdi-');
+            this.innerHTML = `<i class="mdi ${iconClass}" style="font-size: inherit; color: inherit;"></i>`;
+          }
+        }
+      }
+      customElements.define('ha-icon', HaIcon);
+    </script>
+  </head>
+  <body>
+    <h2>Battery PV Card - Test avec indicateur de puissance</h2>
+
+    <div class="controls">
+      <button onclick="loadScenario('charging')">Charge (1200W)</button>
+      <button onclick="loadScenario('discharging')">Décharge (-850W)</button>
+      <button onclick="loadScenario('idle')">Repos (0W)</button>
+      <button onclick="loadScenario('low-battery')">Batterie faible (-600W)</button>
+      <button onclick="loadScenario('high-solar')">Solaire max (2200W)</button>
+    </div>
+
+    <div class="container">
+      <div class="scenario-title" id="scenario-title">Cliquez sur un scénario ci-dessus</div>
+      <battery-pv-card id="test-card"></battery-pv-card>
+    </div>
+
+    <script type="module" src="./battery-card.js"></script>
+    <script>
+      const scenarios = {
+        charging: {
+          title: 'Charge - Solaire élevé (Puissance: +1200W)',
+          states: {
+            'sensor.speicher_1_links_battery_percentage': { state: '65', attributes: { unit_of_measurement: '%' } },
+            'sensor.speicher_1_links_battery_capacity': { state: '2500', attributes: { unit_of_measurement: 'Wh' } },
+            'sensor.speicher_1_links_battery_power': { state: '1200', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_solar_power': { state: '1800', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_grid_power': { state: '50', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_house_power': { state: '350', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_input_1_power': { state: '900', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_input_2_power': { state: '900', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_daily_pv_charging': { state: '15800', attributes: { unit_of_measurement: 'Wh' } },
+            'sensor.speicher_1_links_last_update': {
+              state: '2025-10-24T09:15:30',
+              attributes: { friendly_name: 'Last Update' },
+            },
+          },
+        },
+        discharging: {
+          title: 'Décharge - Nuit (Puissance: -850W)',
+          states: {
+            'sensor.speicher_1_links_battery_percentage': { state: '45', attributes: { unit_of_measurement: '%' } },
+            'sensor.speicher_1_links_battery_capacity': { state: '2500', attributes: { unit_of_measurement: 'Wh' } },
+            'sensor.speicher_1_links_battery_power': { state: '-850', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_solar_power': { state: '0', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_grid_power': { state: '200', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_house_power': { state: '1050', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_input_1_power': { state: '0', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_input_2_power': { state: '0', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_daily_pv_charging': { state: '18200', attributes: { unit_of_measurement: 'Wh' } },
+            'sensor.speicher_1_links_last_update': {
+              state: '2025-10-24T22:30:15',
+              attributes: { friendly_name: 'Last Update' },
+            },
+          },
+        },
+        idle: {
+          title: 'Repos - Équilibré (Puissance: 0W)',
+          states: {
+            'sensor.speicher_1_links_battery_percentage': { state: '85', attributes: { unit_of_measurement: '%' } },
+            'sensor.speicher_1_links_battery_capacity': { state: '2500', attributes: { unit_of_measurement: 'Wh' } },
+            'sensor.speicher_1_links_battery_power': { state: '0', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_solar_power': { state: '400', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_grid_power': { state: '20', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_house_power': { state: '380', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_input_1_power': { state: '200', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_input_2_power': { state: '200', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_daily_pv_charging': { state: '8500', attributes: { unit_of_measurement: 'Wh' } },
+            'sensor.speicher_1_links_last_update': {
+              state: '2025-10-24T14:20:45',
+              attributes: { friendly_name: 'Last Update' },
+            },
+          },
+        },
+        'low-battery': {
+          title: 'Batterie faible (Puissance: -600W)',
+          states: {
+            'sensor.speicher_1_links_battery_percentage': { state: '15', attributes: { unit_of_measurement: '%' } },
+            'sensor.speicher_1_links_battery_capacity': { state: '2500', attributes: { unit_of_measurement: 'Wh' } },
+            'sensor.speicher_1_links_battery_power': { state: '-600', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_solar_power': { state: '50', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_grid_power': { state: '550', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_house_power': { state: '1200', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_input_1_power': { state: '30', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_input_2_power': { state: '20', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_daily_pv_charging': { state: '5200', attributes: { unit_of_measurement: 'Wh' } },
+            'sensor.speicher_1_links_last_update': {
+              state: '2025-10-24T19:45:12',
+              attributes: { friendly_name: 'Last Update' },
+            },
+          },
+        },
+        'high-solar': {
+          title: 'Performance solaire maximale (Puissance: +2200W)',
+          states: {
+            'sensor.speicher_1_links_battery_percentage': { state: '88', attributes: { unit_of_measurement: '%' } },
+            'sensor.speicher_1_links_battery_capacity': { state: '2500', attributes: { unit_of_measurement: 'Wh' } },
+            'sensor.speicher_1_links_battery_power': { state: '2200', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_solar_power': { state: '2800', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_grid_power': { state: '-300', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_house_power': { state: '450', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_input_1_power': { state: '1400', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_input_2_power': { state: '1400', attributes: { unit_of_measurement: 'W' } },
+            'sensor.speicher_1_links_daily_pv_charging': { state: '28600', attributes: { unit_of_measurement: 'Wh' } },
+            'sensor.speicher_1_links_last_update': {
+              state: '2025-10-24T13:45:30',
+              attributes: { friendly_name: 'Last Update' },
+            },
+          },
+        },
+      };
+
+      function createMockHass(scenario) {
+        return {
+          states: scenario.states,
+          language: 'fr',
+          callService: () => {},
+        };
+      }
+
+      window.loadScenario = function (scenarioName) {
+        const scenario = scenarios[scenarioName];
+        const titleElement = document.getElementById('scenario-title');
+        const cardElement = document.getElementById('test-card');
+
+        titleElement.textContent = scenario.title;
+
+        // Configuration de la carte avec le device
+        cardElement.setConfig({
+          device: 'speicher_1_links',
+          name: 'Test Battery Storage',
+          compact: true,
+          icon: true,
+          solar: true,
+          battery: true,
+          production: true,
+          output: true,
+          settings: false,
+        });
+
+        // Mise à jour avec les données du scénario
+        cardElement.hass = createMockHass(scenario);
+      };
+
+      // Chargement du scénario par défaut après que la carte soit prête
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => loadScenario('charging'), 100);
+      });
+    </script>
+  </body>
+</html>

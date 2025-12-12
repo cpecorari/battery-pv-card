@@ -1,233 +1,583 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Battery PV Card - Simple Test</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" />
+    <title>Battery PV System - Gauges</title>
     <style>
-      body {
-        font-family: 'Roboto', sans-serif;
-        background-color: #f5f5f5;
-        padding: 20px;
+      * {
         margin: 0;
-        --primary-text-color: #333;
-        --ha-card-background: #fff;
-        --ha-card-border-radius: 12px;
-        --divider-color: #e0e0e0;
+        padding: 0;
+        box-sizing: border-box;
       }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
       .container {
-        max-width: 600px;
-        margin: 20px auto;
+        max-width: 1200px;
+        width: 100%;
       }
-      h2 {
-        text-align: center;
-        color: #333;
-        margin-bottom: 20px;
-      }
+
       .controls {
         text-align: center;
-        margin: 20px 0;
+        margin-bottom: 30px;
       }
-      button {
-        background: #007acc;
+
+      .controls button {
+        background: #4a5568;
         color: white;
         border: none;
-        padding: 10px 16px;
-        border-radius: 6px;
-        margin: 4px;
+        padding: 10px 20px;
+        margin: 5px;
+        border-radius: 8px;
         cursor: pointer;
         font-size: 14px;
+        transition: background 0.3s;
       }
-      button:hover {
-        background: #005999;
+
+      .controls button:hover {
+        background: #2d3748;
       }
-      .scenario-title {
+
+      .gauges-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .gauge-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(2px);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .gauge-wrapper {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+        filter: contrast(1.1) brightness(1.2);
+      }
+
+      .gauge-svg {
+        transform: rotate(-90deg);
+        width: 100%;
+        height: 100%;
+      }
+
+      .gauge-bg {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.1);
+        stroke-width: 6;
+      }
+
+      .gauge-glow {
+        fill: none;
+        stroke-width: 3;
+        stroke-linecap: round;
+        opacity: 0.1;
+        filter: blur(2px);
+      }
+
+      .gauge-fill {
+        fill: none;
+        stroke-width: 8;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.5s ease, stroke 0.5s ease;
+        filter: drop-shadow(0 0 3px currentColor) drop-shadow(0 0 6px currentColor);
+      }
+      .gauge-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         text-align: center;
+      }
+
+      .gauge-status {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
+
+      .gauge-value {
+        color: white;
+        font-size: 28px;
         font-weight: 600;
-        color: #007acc;
-        margin: 16px 0;
-        background: white;
-        padding: 12px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        line-height: 1;
+      }
+
+      .gauge-unit {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      .gauge-title {
+        text-align: center;
+        color: white;
+        font-size: 16px;
+        font-weight: 500;
+        margin-top: 15px;
+      }
+
+      /* Power Flow Gauge (special design) */
+      .power-flow-gauge {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+      }
+
+      .flow-bar {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        bottom: 0;
+        border-radius: 30px 30px 0 0;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .flow-fill {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        transition: height 0.5s ease;
+      }
+
+      .flow-solar {
+        background: linear-gradient(to top, #fbbf24, #f59e0b);
+        z-index: 2;
+      }
+
+      .flow-grid {
+        background: linear-gradient(to top, #60a5fa, #3b82f6);
+        z-index: 1;
+      }
+
+      .flow-labels {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        width: 100%;
+      }
+
+      .flow-total {
+        color: white;
+        font-size: 28px;
+        font-weight: 600;
+      }
+
+      .flow-breakdown {
+        margin-top: 10px;
+        font-size: 12px;
+      }
+
+      .flow-item {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 3px 0;
+      }
+
+      .flow-solar-label {
+        color: #fbbf24;
+      }
+      .flow-grid-label {
+        color: #60a5fa;
+      }
+
+      /* Legend */
+      .legend {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+      }
+
+      .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
       }
     </style>
-
-    <!-- Mock ha-icon component -->
-    <script>
-      class HaIcon extends HTMLElement {
-        static get observedAttributes() {
-          return ['icon'];
-        }
-
-        connectedCallback() {
-          this.render();
-        }
-
-        attributeChangedCallback() {
-          this.render();
-        }
-
-        render() {
-          const icon = this.getAttribute('icon');
-          if (icon) {
-            const iconClass = icon.replace('mdi:', 'mdi-');
-            this.innerHTML = `<i class="mdi ${iconClass}" style="font-size: inherit; color: inherit;"></i>`;
-          }
-        }
-      }
-      customElements.define('ha-icon', HaIcon);
-    </script>
   </head>
   <body>
-    <h2>Battery PV Card - Test avec indicateur de puissance</h2>
-
-    <div class="controls">
-      <button onclick="loadScenario('charging')">Charge (1200W)</button>
-      <button onclick="loadScenario('discharging')">Décharge (-850W)</button>
-      <button onclick="loadScenario('idle')">Repos (0W)</button>
-      <button onclick="loadScenario('low-battery')">Batterie faible (-600W)</button>
-      <button onclick="loadScenario('high-solar')">Solaire max (2200W)</button>
-    </div>
-
     <div class="container">
-      <div class="scenario-title" id="scenario-title">Cliquez sur un scénario ci-dessus</div>
-      <battery-pv-card id="test-card"></battery-pv-card>
+      <div class="controls">
+        <button onclick="setScenario('charging')">Charging</button>
+        <button onclick="setScenario('discharging')">Discharging</button>
+        <button onclick="setScenario('peak-solar')">Peak Solar</button>
+        <button onclick="setScenario('night')">Night</button>
+        <button onclick="setScenario('balanced')">Balanced</button>
+      </div>
+
+      <div class="gauges-container">
+        <!-- Battery Gauge -->
+        <div class="gauge-card">
+          <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 200 200">
+              <circle class="gauge-glow" cx="100" cy="100" r="90" id="battery-glow"></circle>
+              <circle class="gauge-bg" cx="100" cy="100" r="90"></circle>
+              <circle id="battery-gauge" class="gauge-fill" cx="100" cy="100" r="90"></circle>
+            </svg>
+            <div class="gauge-center">
+              <div class="gauge-status" id="battery-status">Standby</div>
+              <div class="gauge-value" id="battery-value">50%</div>
+              <div class="gauge-unit" id="battery-power">0 W</div>
+            </div>
+          </div>
+          <div class="gauge-title">Battery</div>
+        </div>
+
+        <!-- Solar Power Gauge -->
+        <div class="gauge-card">
+          <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 200 200">
+              <defs>
+                <linearGradient id="solar-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color: #6b7280; stop-opacity: 1" />
+                  <stop offset="10%" style="stop-color: #fef3c7; stop-opacity: 1" />
+                  <stop offset="25%" style="stop-color: #fbbf24; stop-opacity: 1" />
+                  <stop offset="50%" style="stop-color: #f59e0b; stop-opacity: 1" />
+                  <stop offset="75%" style="stop-color: #f87171; stop-opacity: 1" />
+                  <stop offset="100%" style="stop-color: #dc2626; stop-opacity: 1" />
+                </linearGradient>
+              </defs>
+              <circle class="gauge-glow" cx="100" cy="100" r="90" id="solar-glow"></circle>
+              <circle class="gauge-bg" cx="100" cy="100" r="90"></circle>
+              <circle id="solar-gauge" class="gauge-fill" cx="100" cy="100" r="90"></circle>
+            </svg>
+            <div class="gauge-center">
+              <div class="gauge-status">Production</div>
+              <div class="gauge-value" id="solar-value">0.0</div>
+              <div class="gauge-unit">kW</div>
+            </div>
+          </div>
+          <div class="gauge-title">Solar Power</div>
+        </div>
+
+        <!-- House Load Gauge -->
+        <div class="gauge-card">
+          <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 200 200">
+              <circle class="gauge-glow" cx="100" cy="100" r="90" id="house-glow"></circle>
+              <circle class="gauge-bg" cx="100" cy="100" r="90"></circle>
+              <circle
+                id="house-solar-gauge"
+                class="gauge-fill"
+                cx="100"
+                cy="100"
+                r="90"
+                style="stroke: #fbbf24"
+              ></circle>
+              <circle
+                id="house-battery-gauge"
+                class="gauge-fill"
+                cx="100"
+                cy="100"
+                r="90"
+                style="stroke: #10b981"
+              ></circle>
+              <circle
+                id="house-grid-gauge"
+                class="gauge-fill"
+                cx="100"
+                cy="100"
+                r="90"
+                style="stroke: #60a5fa"
+              ></circle>
+            </svg>
+            <div class="gauge-center">
+              <div class="gauge-status">Consumption</div>
+              <div class="gauge-value" id="house-value">0.0</div>
+              <div class="gauge-unit">kW</div>
+            </div>
+          </div>
+          <div class="gauge-title">House Load</div>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-color" style="background: #fbbf24"></div>
+              <span>Solar: <span id="house-solar-contrib">0 W</span></span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: #10b981"></div>
+              <span>Battery: <span id="house-battery-contrib">0 W</span></span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: #60a5fa"></div>
+              <span>Grid: <span id="house-grid-contrib">0 W</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script type="module" src="./battery-card.js"></script>
     <script>
-      const scenarios = {
-        charging: {
-          title: 'Charge - Solaire élevé (Puissance: +1200W)',
-          states: {
-            'sensor.speicher_1_links_battery_percentage': { state: '65', attributes: { unit_of_measurement: '%' } },
-            'sensor.speicher_1_links_battery_capacity': { state: '2500', attributes: { unit_of_measurement: 'Wh' } },
-            'sensor.speicher_1_links_battery_power': { state: '1200', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_solar_power': { state: '1800', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_grid_power': { state: '50', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_house_power': { state: '350', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_input_1_power': { state: '900', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_input_2_power': { state: '900', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_daily_pv_charging': { state: '15800', attributes: { unit_of_measurement: 'Wh' } },
-            'sensor.speicher_1_links_last_update': {
-              state: '2025-10-24T09:15:30',
-              attributes: { friendly_name: 'Last Update' },
-            },
-          },
-        },
-        discharging: {
-          title: 'Décharge - Nuit (Puissance: -850W)',
-          states: {
-            'sensor.speicher_1_links_battery_percentage': { state: '45', attributes: { unit_of_measurement: '%' } },
-            'sensor.speicher_1_links_battery_capacity': { state: '2500', attributes: { unit_of_measurement: 'Wh' } },
-            'sensor.speicher_1_links_battery_power': { state: '-850', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_solar_power': { state: '0', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_grid_power': { state: '200', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_house_power': { state: '1050', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_input_1_power': { state: '0', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_input_2_power': { state: '0', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_daily_pv_charging': { state: '18200', attributes: { unit_of_measurement: 'Wh' } },
-            'sensor.speicher_1_links_last_update': {
-              state: '2025-10-24T22:30:15',
-              attributes: { friendly_name: 'Last Update' },
-            },
-          },
-        },
-        idle: {
-          title: 'Repos - Équilibré (Puissance: 0W)',
-          states: {
-            'sensor.speicher_1_links_battery_percentage': { state: '85', attributes: { unit_of_measurement: '%' } },
-            'sensor.speicher_1_links_battery_capacity': { state: '2500', attributes: { unit_of_measurement: 'Wh' } },
-            'sensor.speicher_1_links_battery_power': { state: '0', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_solar_power': { state: '400', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_grid_power': { state: '20', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_house_power': { state: '380', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_input_1_power': { state: '200', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_input_2_power': { state: '200', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_daily_pv_charging': { state: '8500', attributes: { unit_of_measurement: 'Wh' } },
-            'sensor.speicher_1_links_last_update': {
-              state: '2025-10-24T14:20:45',
-              attributes: { friendly_name: 'Last Update' },
-            },
-          },
-        },
-        'low-battery': {
-          title: 'Batterie faible (Puissance: -600W)',
-          states: {
-            'sensor.speicher_1_links_battery_percentage': { state: '15', attributes: { unit_of_measurement: '%' } },
-            'sensor.speicher_1_links_battery_capacity': { state: '2500', attributes: { unit_of_measurement: 'Wh' } },
-            'sensor.speicher_1_links_battery_power': { state: '-600', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_solar_power': { state: '50', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_grid_power': { state: '550', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_house_power': { state: '1200', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_input_1_power': { state: '30', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_input_2_power': { state: '20', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_daily_pv_charging': { state: '5200', attributes: { unit_of_measurement: 'Wh' } },
-            'sensor.speicher_1_links_last_update': {
-              state: '2025-10-24T19:45:12',
-              attributes: { friendly_name: 'Last Update' },
-            },
-          },
-        },
-        'high-solar': {
-          title: 'Performance solaire maximale (Puissance: +2200W)',
-          states: {
-            'sensor.speicher_1_links_battery_percentage': { state: '88', attributes: { unit_of_measurement: '%' } },
-            'sensor.speicher_1_links_battery_capacity': { state: '2500', attributes: { unit_of_measurement: 'Wh' } },
-            'sensor.speicher_1_links_battery_power': { state: '2200', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_solar_power': { state: '2800', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_grid_power': { state: '-300', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_house_power': { state: '450', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_input_1_power': { state: '1400', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_input_2_power': { state: '1400', attributes: { unit_of_measurement: 'W' } },
-            'sensor.speicher_1_links_daily_pv_charging': { state: '28600', attributes: { unit_of_measurement: 'Wh' } },
-            'sensor.speicher_1_links_last_update': {
-              state: '2025-10-24T13:45:30',
-              attributes: { friendly_name: 'Last Update' },
-            },
-          },
-        },
+      // Configuration
+      const config = {
+        solarMaxPower: 4500, // Configurable max solar power in watts
+        batteryCapacity: 10000, // Battery capacity in Wh
       };
 
-      function createMockHass(scenario) {
-        return {
-          states: scenario.states,
-          language: 'fr',
-          callService: () => {},
-        };
+      // Calculate circle circumference
+      const radius = 90;
+      const circumference = 2 * Math.PI * radius;
+
+      // Initialize battery and solar gauges only
+      document.getElementById('battery-gauge').style.strokeDasharray = circumference;
+      document.getElementById('battery-gauge').style.strokeDashoffset = circumference;
+      document.getElementById('solar-gauge').style.strokeDasharray = circumference;
+      document.getElementById('solar-gauge').style.strokeDashoffset = circumference;
+
+      // House gauges are initialized in updateHouseGauge function
+
+      function updateBatteryGauge(soc, power) {
+        const gauge = document.getElementById('battery-gauge');
+        const offset = circumference - (soc / 100) * circumference;
+        gauge.style.strokeDashoffset = offset;
+
+        // Gradient color based on charging/discharging
+        let color;
+        if (power > 50) {
+          // Charging - blue to green gradient
+          color = `url(#charging-gradient)`;
+          document.getElementById('battery-status').textContent = 'Charging..';
+        } else if (power < -50) {
+          // Discharging - orange
+          color = '#fb923c';
+          document.getElementById('battery-status').textContent = 'Discharging';
+        } else {
+          // Idle - gray
+          color = '#6b7280';
+          document.getElementById('battery-status').textContent = 'Standby';
+        }
+
+        // Create gradient if charging
+        if (power > 50) {
+          let defs = document.querySelector('defs');
+          if (!defs) {
+            defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            document.querySelector('.gauge-svg').appendChild(defs);
+          }
+          defs.innerHTML = `
+                    <linearGradient id="charging-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#34d399;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+                    </linearGradient>
+                `;
+        }
+
+        gauge.style.stroke = color;
+
+        // Update glow circle
+        const glowCircle = document.getElementById('battery-glow');
+        if (glowCircle) {
+          const glowColor = typeof color === 'string' ? color : '#34d399';
+          glowCircle.style.stroke = glowColor;
+        }
+
+        document.getElementById('battery-value').textContent = soc + '%';
+        document.getElementById('battery-power').textContent = (power > 0 ? '+' : '') + power + ' W';
       }
 
-      window.loadScenario = function (scenarioName) {
-        const scenario = scenarios[scenarioName];
-        const titleElement = document.getElementById('scenario-title');
-        const cardElement = document.getElementById('test-card');
+      function updateSolarGauge(power) {
+        const gauge = document.getElementById('solar-gauge');
+        const percentage = Math.min((power / config.solarMaxPower) * 100, 100);
+        const offset = circumference - (percentage / 100) * circumference;
+        gauge.style.strokeDashoffset = offset;
 
-        titleElement.textContent = scenario.title;
+        // Dynamic color based on power level with smooth transitions
+        let color;
+        if (power < 150) {
+          // 0-150W: Grey
+          color = '#6b7280';
+        } else if (power < 400) {
+          // 150-400W: Light yellow
+          color = '#fef3c7';
+        } else if (power < 900) {
+          // 400-900W: Bright yellow
+          color = '#fbbf24';
+        } else if (power < 2000) {
+          // 900-2000W: Orange
+          color = '#f59e0b';
+        } else if (power < 3500) {
+          // 2000-3500W: Light red
+          color = '#f87171';
+        } else {
+          // 3500W+: Bright red
+          color = '#dc2626';
+        }
 
-        // Configuration de la carte avec le device
-        cardElement.setConfig({
-          device: 'speicher_1_links',
-          name: 'Test Battery Storage',
-          compact: true,
-          icon: true,
-          solar: true,
-          battery: true,
-          production: true,
-          output: true,
-          settings: false,
-        });
+        gauge.style.stroke = color;
+        gauge.style.color = color; // For glow effect
 
-        // Mise à jour avec les données du scénario
-        cardElement.hass = createMockHass(scenario);
+        // Update glow circle
+        const glowCircle = document.getElementById('solar-glow');
+        if (glowCircle) {
+          glowCircle.style.stroke = color;
+        }
+
+        document.getElementById('solar-value').textContent = (power / 1000).toFixed(1);
+      }
+      function updateHouseGauge(houseLoad, solarContribution, batteryContribution, gridContribution) {
+        const solarGauge = document.getElementById('house-solar-gauge');
+        const batteryGauge = document.getElementById('house-battery-gauge');
+        const gridGauge = document.getElementById('house-grid-gauge');
+        const maxHouseLoad = 6000; // Max expected house load for gauge (configurable)
+
+        // Calculate individual percentages relative to max capacity
+        const solarPercentage = (solarContribution / maxHouseLoad) * 100;
+        const batteryPercentage = (batteryContribution / maxHouseLoad) * 100;
+        const gridPercentage = (gridContribution / maxHouseLoad) * 100;
+
+        // Convert percentages to arc lengths
+        const solarArcLength = (solarPercentage / 100) * circumference;
+        const batteryArcLength = (batteryPercentage / 100) * circumference;
+        const gridArcLength = (gridPercentage / 100) * circumference;
+
+        // Solar segment (starts at 0)
+        // strokeDasharray: [segment length, gap to end of circle]
+        solarGauge.style.strokeDasharray = `${solarArcLength} ${circumference}`;
+        solarGauge.style.strokeDashoffset = 0;
+        solarGauge.style.color = '#fbbf24';
+
+        // Battery segment (starts after solar)
+        // offset by negative to rotate start position
+        batteryGauge.style.strokeDasharray = `${batteryArcLength} ${circumference}`;
+        batteryGauge.style.strokeDashoffset = -solarArcLength;
+        batteryGauge.style.color = '#10b981';
+
+        // Grid segment (starts after battery)
+        gridGauge.style.strokeDasharray = `${gridArcLength} ${circumference}`;
+        gridGauge.style.strokeDashoffset = -(solarArcLength + batteryArcLength);
+        gridGauge.style.color = '#60a5fa';
+
+        // Update house glow circle with dominant color
+        const houseGlow = document.getElementById('house-glow');
+        if (houseGlow) {
+          // Use the color of the largest contributor
+          let dominantColor = '#60a5fa'; // default grid
+          if (solarContribution >= batteryContribution && solarContribution >= gridContribution) {
+            dominantColor = '#fbbf24'; // solar
+          } else if (batteryContribution >= gridContribution) {
+            dominantColor = '#10b981'; // battery
+          }
+          houseGlow.style.stroke = dominantColor;
+        }
+
+        document.getElementById('house-value').textContent = (houseLoad / 1000).toFixed(1);
+        document.getElementById('house-solar-contrib').textContent = Math.round(solarContribution) + ' W';
+        document.getElementById('house-battery-contrib').textContent = Math.round(batteryContribution) + ' W';
+        document.getElementById('house-grid-contrib').textContent = Math.round(gridContribution) + ' W';
+      }
+      function updateSystem(data) {
+        updateBatteryGauge(data.batterySOC, data.batteryPower);
+        updateSolarGauge(data.solarPower);
+
+        // Calculate house load contributions in priority order: Solar → Battery → Grid
+        let solarToHouse = 0;
+        let batteryToHouse = 0;
+        let gridToHouse = 0;
+
+        // Step 1: Solar first goes to house
+        if (data.solarPower > 0) {
+          solarToHouse = Math.min(data.solarPower, data.houseLoad);
+        }
+
+        // Step 2: Remaining demand filled by battery (if discharging)
+        const remainingAfterSolar = data.houseLoad - solarToHouse;
+        if (remainingAfterSolar > 0 && data.batteryPower < 0) {
+          // Battery is discharging
+          batteryToHouse = Math.min(Math.abs(data.batteryPower), remainingAfterSolar);
+        }
+
+        // Step 3: Any remaining demand is filled by grid
+        const remainingAfterBattery = remainingAfterSolar - batteryToHouse;
+        if (remainingAfterBattery > 0) {
+          gridToHouse = remainingAfterBattery;
+        }
+
+        updateHouseGauge(data.houseLoad, solarToHouse, batteryToHouse, gridToHouse);
+      }
+
+      // Scenarios
+      const scenarios = {
+        charging: {
+          batterySOC: 65,
+          batteryPower: 1200,
+          solarPower: 2800,
+          houseLoad: 800,
+        },
+        discharging: {
+          batterySOC: 45,
+          batteryPower: -850,
+          solarPower: 0,
+          houseLoad: 1500,
+        },
+        'peak-solar': {
+          batterySOC: 88,
+          batteryPower: 2200,
+          solarPower: 4200,
+          houseLoad: 650,
+        },
+        night: {
+          batterySOC: 30,
+          batteryPower: -600,
+          solarPower: 0,
+          houseLoad: 1200,
+        },
+        balanced: {
+          batterySOC: 75,
+          batteryPower: 0,
+          solarPower: 1200,
+          houseLoad: 1200,
+        },
       };
 
-      // Chargement du scénario par défaut après que la carte soit prête
-      document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => loadScenario('charging'), 100);
-      });
+      function setScenario(name) {
+        const data = scenarios[name];
+        if (data) {
+          updateSystem(data);
+        }
+      }
+
+      // Initialize with balanced scenario
+      setScenario('balanced');
+
+      // Auto-cycle scenarios for demo (optional)
+      let scenarioNames = Object.keys(scenarios);
+      let currentIndex = 0;
+
+      // Uncomment to auto-cycle every 5 seconds
+      // setInterval(() => {
+      //     currentIndex = (currentIndex + 1) % scenarioNames.length;
+      //     setScenario(scenarioNames[currentIndex]);
+      // }, 5000);
     </script>
   </body>
 </html>
