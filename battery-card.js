@@ -439,6 +439,36 @@ class B2500DCard extends LitElement {
         min-width: 70px;
       }
 
+      /* New Battery Bar Styles */
+      .battery-bar-wrapper {
+        position: relative;
+        width: 70px;
+        height: 90px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: -6px;
+      }
+
+      .battery-bar-svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .battery-bar-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      #battery-level-bar {
+        transition: transform 0.6s ease;
+      }
+
       .gauge-wrapper {
         position: relative;
         width: 70px;
@@ -505,7 +535,7 @@ class B2500DCard extends LitElement {
         text-align: center;
         color: rgba(255, 255, 255, 0.6);
         font-size: 10px;
-        margin-top: 4px;
+        margin-top: 2px;
         font-weight: 500;
         display: flex;
         flex-direction: row;
@@ -518,7 +548,7 @@ class B2500DCard extends LitElement {
       .compact .right {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 2px;
         flex: 1;
       }
 
@@ -814,23 +844,46 @@ class B2500DCard extends LitElement {
       }
     };
 
-    // Battery gauge calculations
-    const batteryOffset = circumference - (percent / 100) * circumference;
-    const batteryDisplay = formatGaugeValue(this._batteryPower);
+    // Helper function to format battery display with sign
+    const formatBatteryValue = (power) => {
+      const absPower = Math.abs(power);
+      let value;
+      if (absPower < 1000) {
+        value = Math.round(power); // Keep sign
+      } else {
+        value = (power / 1000).toFixed(1); // Keep sign
+      }
+      const unit = absPower < 1000 ? 'W' : 'kW';
+      return { value, unit };
+    };
 
-    // Determine battery color
-    let batteryColor, batteryGradient;
+    // Battery gauge calculations
+    const batteryDisplay = formatBatteryValue(this._batteryPower);
+
+    // Outer circle: power flow direction
+    const maxBatteryPower = 3000; // Max charging/discharging power
+    const batteryPowerPercent = Math.min((Math.abs(this._batteryPower) / maxBatteryPower) * 100, 100);
+    const batteryPowerArc = (batteryPowerPercent / 100) * circumference;
+
+    let batteryPowerColor, batteryPowerOffset, batteryGradient;
     if (this._batteryPower > 50) {
-      // Charging - use gradient
+      // Charging - clockwise green gradient
       batteryGradient = true;
-      batteryColor = 'url(#charging-gradient)';
+      batteryPowerColor = 'url(#charging-gradient)';
+      batteryPowerOffset = circumference - batteryPowerArc; // Clockwise from top
     } else if (this._batteryPower < -50) {
-      // Discharging
-      batteryColor = '#fb923c';
+      // Discharging - counter-clockwise red/orange
+      batteryPowerColor = '#fb923c';
+      batteryPowerOffset = batteryPowerArc; // Counter-clockwise from top (positive offset)
     } else {
       // Idle
-      batteryColor = '#6b7280';
+      batteryPowerColor = '#6b7280';
+      batteryPowerOffset = circumference;
     }
+
+    // Inner circle: battery percentage (green >10%, orange ≤10%)
+    const batteryPercentOffset = innerCircumference - (percent / 100) * innerCircumference;
+    const batteryPercentColor = percent > 10 ? '#10b981' : '#fb923c';
 
     // Solar gauge calculations
     const solarMaxPower = 4500;
@@ -842,13 +895,13 @@ class B2500DCard extends LitElement {
     const maxHouseLoad = 6000;
     const houseDisplay = formatGaugeValue(this._housePower);
 
-    // Calculate contributions
+    // Calculate contributions - solar can exceed house load
     let solarToHouse = 0;
     let batteryToHouse = 0;
     let gridToHouse = 0;
 
     if (this._solarPower > 0) {
-      solarToHouse = Math.min(this._solarPower, this._housePower);
+      solarToHouse = this._solarPower; // Can be > house load
     }
 
     const remainingAfterSolar = this._housePower - solarToHouse;
@@ -864,6 +917,7 @@ class B2500DCard extends LitElement {
     const totalPercentage = Math.min((this._housePower / maxHouseLoad) * 100, 100);
     const totalArcLength = (totalPercentage / 100) * circumference;
 
+    // Solar arc can exceed house load inner circle
     const solarPercentageHouse = (solarToHouse / maxHouseLoad) * 100;
     const batteryPercentageHouse = (batteryToHouse / maxHouseLoad) * 100;
     const solarArcLength = (solarPercentageHouse / 100) * innerCircumference;
@@ -873,31 +927,82 @@ class B2500DCard extends LitElement {
       <div class="compact">
         <!-- Gauges Section -->
         <div class="gauges-section">
-          <!-- Battery Gauge -->
+          <!-- Battery Gauge - Vertical Bar -->
           <div class="battery-section">
-            <div class="gauge-wrapper">
-              <svg class="gauge-svg" viewBox="0 0 100 100">
-                ${batteryGradient
-                  ? html`
-                      <defs>
-                        <linearGradient id="charging-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
-                          <stop offset="50%" style="stop-color:#34d399;stop-opacity:1" />
-                          <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
-                        </linearGradient>
-                      </defs>
-                    `
-                  : ''}
-                <circle class="gauge-bg" cx="50" cy="50" r="47"></circle>
-                <circle
-                  class="gauge-fill"
-                  cx="50"
-                  cy="50"
-                  r="47"
-                  style="stroke: ${batteryColor}; stroke-dasharray: ${circumference} ${circumference}; stroke-dashoffset: ${batteryOffset};"
-                ></circle>
+            <div class="battery-bar-wrapper">
+              <svg class="battery-bar-svg" viewBox="0 0 70 100" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                  <!-- Gradient for battery level (red at bottom → yellow → green at top) -->
+                  <linearGradient id="battery-level-gradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+                    <stop offset="30%" style="stop-color:#f59e0b;stop-opacity:1" />
+                    <stop offset="60%" style="stop-color:#eab308;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+                  </linearGradient>
+                  <!-- Mask for battery fill -->
+                  <mask id="battery-fill-mask">
+                    <rect x="20" y="15" width="30" height="70" fill="white" rx="3" />
+                  </mask>
+                </defs>
+
+                <!-- Background bar -->
+                <rect
+                  x="20"
+                  y="15"
+                  width="30"
+                  height="70"
+                  fill="rgba(255,255,255,0.1)"
+                  rx="3"
+                  stroke="rgba(255,255,255,0.2)"
+                  stroke-width="1"
+                />
+
+                <!-- Battery level fill with gradient -->
+                <rect
+                  id="battery-level-bar"
+                  x="20"
+                  y="15"
+                  width="30"
+                  height="70"
+                  fill="url(#battery-level-gradient)"
+                  mask="url(#battery-fill-mask)"
+                  style="transform-origin: 35px 85px; transform: scaleY(${percent / 100})"
+                />
+
+                <!-- Charging border (green, anti-clockwise from left of terminal) -->
+                <rect
+                  id="battery-charging-border"
+                  x="15"
+                  y="10"
+                  width="40"
+                  height="80"
+                  fill="none"
+                  rx="5"
+                  stroke="#10b981"
+                  stroke-width="3"
+                  opacity="${this._batteryPower > 50 ? 0.9 : 0}"
+                  style="stroke-dasharray: ${batteryPowerArc} 240; stroke-dashoffset: -25; transform: scaleX(-1); transform-origin: 35px 50px; transition: stroke-dasharray 0.5s ease, opacity 0.3s ease;"
+                />
+
+                <!-- Discharging border (red, clockwise from right of terminal) -->
+                <rect
+                  id="battery-discharging-border"
+                  x="15"
+                  y="10"
+                  width="40"
+                  height="80"
+                  fill="none"
+                  rx="5"
+                  stroke="#ef4444"
+                  stroke-width="3"
+                  opacity="${this._batteryPower < -50 ? 0.9 : 0}"
+                  style="stroke-dasharray: ${batteryPowerArc} 240; stroke-dashoffset: -25; transition: stroke-dasharray 0.5s ease, opacity 0.3s ease;"
+                />
+
+                <!-- Battery terminal on top -->
+                <rect x="28" y="8" width="14" height="4" fill="rgba(255,255,255,0.3)" rx="1.5" />
               </svg>
-              <div class="gauge-center">
+              <div class="battery-bar-center">
                 <div class="gauge-value">${batteryDisplay.value}</div>
                 <div class="gauge-unit">${batteryDisplay.unit}</div>
               </div>
