@@ -1118,7 +1118,7 @@ class B2500DCard extends LitElement {
                 </defs>
                 <!-- Background circles -->
                 <circle class="gauge-bg" cx="50" cy="50" r="47"></circle>
-                <circle class="gauge-bg" cx="50" cy="50" r="39"></circle>
+                <circle class="gauge-bg" cx="50" cy="50" r="39" style="display: none;"></circle>
                 <!-- Outer circle: total house load -->
                 <circle
                   id="house-total-gauge"
