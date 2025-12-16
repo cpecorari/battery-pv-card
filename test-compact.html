@@ -22,7 +22,7 @@
       }
 
       .container {
-        max-width: 600px;
+        max-width: 400px;
         width: 100%;
       }
 
@@ -79,8 +79,8 @@
       /* New Battery Bar Styles */
       .battery-bar-wrapper {
         position: relative;
-        width: 70px;
-        height: 100px;
+        width: 90px;
+        height: 112px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -100,6 +100,17 @@
         text-align: center;
         z-index: 10;
         pointer-events: none;
+      }
+
+      .battery-bar-center .gauge-percentage {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .battery-bar-center .gauge-value {
+        font-size: 16px;
       }
 
       #battery-level-bar {
@@ -171,6 +182,11 @@
         background: transparent;
       }
 
+      .house-section .gauge-wrapper {
+        width: 90px;
+        height: 90px;
+      }
+
       .gauge-wrapper::before {
         content: '';
         position: absolute;
@@ -239,6 +255,14 @@
         filter: drop-shadow(0 0 2px currentColor) drop-shadow(0 0 4px currentColor) drop-shadow(0 0 8px currentColor);
       }
 
+      #house-solar-gauge {
+        stroke-width: 5;
+      }
+
+      #house-battery-gauge {
+        stroke-width: 5;
+      }
+
       .gauge-center {
         position: absolute;
         top: 50%;
@@ -264,6 +288,7 @@
       .gauge-percentage {
         color: rgba(255, 255, 255, 0.5);
         font-size: 9px;
+        margin-top: -4px;
       }
 
       .gauge-label {
@@ -277,6 +302,47 @@
         gap: 2px;
       }
 
+      .battery-section .gauge-label {
+        display: none;
+      }
+
+      .solar-section {
+        display: none;
+      }
+
+      .house-section .gauge-label {
+        display: none;
+      }
+
+      .house-section .gauge-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+      }
+
+      .house-section .solar-power-label {
+        color: #fbbf24;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .house-section .gauge-value-wrapper {
+        display: flex;
+        align-items: baseline;
+        gap: 3px;
+      }
+
+      .house-section .gauge-value {
+        font-size: 20px;
+      }
+
+      .house-section .gauge-unit {
+        font-size: 9px;
+        margin-top: 0;
+      }
+
       .battery-power {
         text-align: center;
         color: rgba(255, 255, 255, 0.7);
@@ -288,7 +354,8 @@
       .right {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        margin-left: 24px;
+        gap: 2px;
         flex: 1;
       }
 
@@ -296,7 +363,6 @@
         font-weight: 600;
         font-size: 15px;
         color: white;
-        order: 2;
       }
 
       .info-row {
@@ -307,28 +373,12 @@
         font-size: 13px;
       }
 
-      .info-row.solar {
-        order: 1;
-      }
-
-      .info-row.flex-row {
-        order: 3;
-        display: flex;
-        gap: 16px;
-      }
-
-      .info-row.battery-info {
-        order: 4;
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.6);
-      }
-
       .info-item {
         display: grid;
         grid-template-columns: 18px 1fr;
         align-items: center;
         gap: 6px;
-        min-width: 80px;
+        width: 100%;
       }
 
       .icon {
@@ -366,7 +416,7 @@
           <!-- Battery Gauge - Vertical Bar -->
           <div class="battery-section">
             <div class="battery-bar-wrapper">
-              <svg class="battery-bar-svg" viewBox="0 0 70 100" preserveAspectRatio="xMidYMid meet">
+              <svg class="battery-bar-svg" viewBox="0 0 90 112" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <!-- Gradient for battery level (red at bottom → yellow → green at top) -->
                   <linearGradient id="battery-level-gradient" x1="0%" y1="100%" x2="0%" y2="0%">
@@ -377,16 +427,16 @@
                   </linearGradient>
                   <!-- Mask for battery fill -->
                   <mask id="battery-fill-mask">
-                    <rect x="20" y="15" width="30" height="70" fill="white" rx="3" />
+                    <rect x="30" y="18" width="30" height="78" fill="white" rx="3" />
                   </mask>
                 </defs>
 
                 <!-- Background bar -->
                 <rect
-                  x="20"
-                  y="15"
+                  x="30"
+                  y="18"
                   width="30"
-                  height="70"
+                  height="78"
                   fill="rgba(255,255,255,0.1)"
                   rx="3"
                   stroke="rgba(255,255,255,0.2)"
@@ -396,32 +446,32 @@
                 <!-- Battery level fill with gradient -->
                 <rect
                   id="battery-level-bar"
-                  x="20"
-                  y="15"
+                  x="30"
+                  y="18"
                   width="30"
-                  height="70"
+                  height="78"
                   fill="url(#battery-level-gradient)"
                   mask="url(#battery-fill-mask)"
-                  style="transform-origin: 35px 85px; transform: scaleY(0)"
+                  style="transform-origin: 45px 96px; transform: scaleY(0)"
                 />
 
                 <!-- Charging border (green, anti-clockwise from left of terminal) -->
                 <rect
                   id="battery-charging-border"
-                  x="15"
-                  y="10"
-                  width="40"
-                  height="80"
+                  x="24"
+                  y="12"
+                  width="42"
+                  height="90"
                   fill="none"
                   rx="5"
                   stroke="#10b981"
                   stroke-width="3"
                   opacity="0"
                   style="
-                    stroke-dasharray: 0 240;
-                    stroke-dashoffset: -25;
+                    stroke-dasharray: 0 260;
+                    stroke-dashoffset: -28;
                     transform: scaleX(-1);
-                    transform-origin: 35px 50px;
+                    transform-origin: 45px 56px;
                     transition: stroke-dasharray 0.5s ease, opacity 0.3s ease;
                   "
                 />
@@ -429,26 +479,27 @@
                 <!-- Discharging border (red, clockwise from right of terminal) -->
                 <rect
                   id="battery-discharging-border"
-                  x="15"
-                  y="10"
-                  width="40"
-                  height="80"
+                  x="24"
+                  y="12"
+                  width="42"
+                  height="90"
                   fill="none"
                   rx="5"
                   stroke="#ef4444"
                   stroke-width="3"
                   opacity="0"
                   style="
-                    stroke-dasharray: 0 240;
-                    stroke-dashoffset: -25;
+                    stroke-dasharray: 0 260;
+                    stroke-dashoffset: -28;
                     transition: stroke-dasharray 0.5s ease, opacity 0.3s ease;
                   "
                 />
 
                 <!-- Battery terminal on top -->
-                <rect x="28" y="8" width="14" height="4" fill="rgba(255,255,255,0.3)" rx="1.5" />
+                <rect x="37" y="10" width="16" height="4" fill="rgba(255,255,255,0.3)" rx="1.5" />
               </svg>
               <div class="battery-bar-center">
+                <div class="gauge-percentage" id="battery-percentage">50%</div>
                 <div class="gauge-value" id="battery-display">0</div>
                 <div class="gauge-unit">kW</div>
               </div>
@@ -456,7 +507,7 @@
             <div class="gauge-label">
               <div>
                 Battery
-                <span class="gauge-percentage" id="battery-percentage">50%</span>
+                <span class="gauge-percentage">50%</span>
               </div>
             </div>
           </div>
@@ -501,7 +552,14 @@
                 <circle class="gauge-bg" cx="50" cy="50" r="47"></circle>
                 <circle class="gauge-bg" cx="50" cy="50" r="39"></circle>
                 <!-- Outer circle: total house load (green to red gradient) -->
-                <circle id="house-total-gauge" class="gauge-fill" cx="50" cy="50" r="47"></circle>
+                <circle
+                  id="house-total-gauge"
+                  class="gauge-fill"
+                  cx="50"
+                  cy="50"
+                  r="47"
+                  style="transition: stroke-dasharray 0.6s ease, stroke-dashoffset 0.6s ease"
+                ></circle>
                 <!-- Inner circle: solar contribution -->
                 <circle
                   id="house-solar-gauge"
@@ -509,7 +567,10 @@
                   cx="50"
                   cy="50"
                   r="39"
-                  style="stroke: #fbbf24"
+                  style="
+                    stroke: #fbbf24;
+                    transition: stroke-dasharray 0.6s ease, stroke-dashoffset 0.6s ease, visibility 0s 0.6s;
+                  "
                 ></circle>
                 <!-- Inner circle: battery contribution (follows solar) -->
                 <circle
@@ -518,22 +579,28 @@
                   cx="50"
                   cy="50"
                   r="39"
-                  style="stroke: #10b981"
+                  style="
+                    stroke: #10b981;
+                    transition: stroke-dasharray 0.6s ease, stroke-dashoffset 0.6s ease, visibility 0s 0.6s;
+                  "
                 ></circle>
               </svg>
               <div class="gauge-center">
-                <div class="gauge-value" id="house-display">0</div>
-                <div class="gauge-unit">kW</div>
+                <div class="solar-power-label" id="solar-power-display">0 W</div>
+                <div class="gauge-value-wrapper">
+                  <div class="gauge-value" id="house-display">0</div>
+                  <div class="gauge-unit">kW</div>
+                </div>
               </div>
             </div>
             <div class="gauge-label">House</div>
           </div>
         </div>
 
-        <!-- Right Section -->
+        <!-- Right Section - Vertical Column -->
         <div class="right">
-          <!-- Solar and Battery (first row) -->
-          <div class="info-row flex-row">
+          <!-- Solar Row -->
+          <div class="info-row">
             <div class="info-item">
               <div class="icon" style="color: #fbbf24">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -544,7 +611,10 @@
               </div>
               <span class="value" id="solar-value">0 W</span>
             </div>
+          </div>
 
+          <!-- Battery Row -->
+          <div class="info-row">
             <div class="info-item">
               <div class="icon" style="color: #60a5fa">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -558,10 +628,10 @@
           </div>
 
           <!-- Card Name -->
-          <div class="card-name">Conso - Solaire</div>
+          <div class="card-name"></div>
 
-          <!-- House and Grid -->
-          <div class="info-row flex-row">
+          <!-- House Row -->
+          <div class="info-row">
             <div class="info-item">
               <div class="icon" style="color: #10b981">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -572,7 +642,10 @@
               </div>
               <span class="value" id="house-value">0 W</span>
             </div>
+          </div>
 
+          <!-- Grid Row -->
+          <div class="info-row">
             <div class="info-item">
               <div class="icon" style="color: #ef4444">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -659,21 +732,19 @@
       }
 
       function updateSolarGauge(power) {
-        const solarGauge = document.getElementById('solar-gauge');
-        const solarMaxPower = 4500;
-        const percentage = Math.min((power / solarMaxPower) * 100, 100);
-        const offset = circumference - (percentage / 100) * circumference;
-        solarGauge.style.strokeDashoffset = offset;
-
-        // Use gradient for smooth color transition
-        solarGauge.style.stroke = 'url(#solar-gradient)';
-        solarGauge.style.color = '#fbbf24'; // fallback for effects
-
-        document.getElementById('solar-display').textContent = (power / 1000).toFixed(1);
+        // Update solar power display on house gauge
+        const solarPowerDisplay = document.getElementById('solar-power-display');
+        if (solarPowerDisplay) {
+          if (power >= 1000) {
+            solarPowerDisplay.textContent = (power / 1000).toFixed(1) + ' kW';
+          } else {
+            solarPowerDisplay.textContent = power + ' W';
+          }
+        }
         document.getElementById('solar-value').textContent = power + ' W';
       }
 
-      function updateHouseGauge(houseLoad, solarContribution, batteryContribution, gridContribution) {
+      function updateHouseGauge(houseLoad, solarPower, batteryContribution, gridContribution) {
         const totalGauge = document.getElementById('house-total-gauge');
         const solarGauge = document.getElementById('house-solar-gauge');
         const batteryGauge = document.getElementById('house-battery-gauge');
@@ -686,8 +757,8 @@
         totalGauge.style.strokeDashoffset = 0;
         totalGauge.style.stroke = 'url(#house-gradient)';
 
-        // Inner circle: solar + battery contributions (renewable energy sources)
-        const solarPercentage = (solarContribution / maxHouseLoad) * 100;
+        // Inner circle: show total solar power (can exceed house load)
+        const solarPercentage = (solarPower / maxHouseLoad) * 100;
         const batteryPercentage = (batteryContribution / maxHouseLoad) * 100;
 
         // Convert percentages to arc lengths for inner circle
@@ -697,14 +768,22 @@
         // Solar segment (starts at 0)
         solarGauge.style.strokeDasharray = `${solarArcLength} ${innerCircumference}`;
         solarGauge.style.strokeDashoffset = 0;
-        solarGauge.style.visibility = solarContribution > 0 ? 'visible' : 'hidden';
+        solarGauge.style.visibility = solarPower > 0 ? 'visible' : 'hidden';
 
         // Battery segment (follows solar)
         batteryGauge.style.strokeDasharray = `${batteryArcLength} ${innerCircumference}`;
         batteryGauge.style.strokeDashoffset = -solarArcLength;
         batteryGauge.style.visibility = batteryContribution > 0 ? 'visible' : 'hidden';
 
-        document.getElementById('house-display').textContent = (houseLoad / 1000).toFixed(1);
+        // Update house display with inline unit
+        const houseDisplay = document.getElementById('house-display');
+        if (houseLoad >= 1000) {
+          houseDisplay.textContent = (houseLoad / 1000).toFixed(1);
+          document.querySelector('.house-section .gauge-unit').textContent = 'kW';
+        } else {
+          houseDisplay.textContent = houseLoad;
+          document.querySelector('.house-section .gauge-unit').textContent = 'W';
+        }
         document.getElementById('house-value').textContent = houseLoad + ' W';
       }
 
@@ -741,7 +820,8 @@
           gridToHouse = remainingAfterBattery;
         }
 
-        updateHouseGauge(data.houseLoad, solarToHouse, batteryToHouse, gridToHouse);
+        // Pass total solar power instead of just contribution to house
+        updateHouseGauge(data.houseLoad, data.solarPower, batteryToHouse, gridToHouse);
         updateCompactInfo(data);
       }
 

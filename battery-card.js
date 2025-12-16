@@ -442,17 +442,17 @@ class B2500DCard extends LitElement {
       /* New Battery Bar Styles */
       .battery-bar-wrapper {
         position: relative;
-        width: 70px;
-        height: 90px;
+        width: 90px;
+        height: 112px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: -6px;
       }
 
       .battery-bar-svg {
         width: 100%;
         height: 100%;
+        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
       }
 
       .battery-bar-center {
@@ -465,6 +465,21 @@ class B2500DCard extends LitElement {
         pointer-events: none;
       }
 
+      .battery-bar-center .gauge-percentage {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .battery-bar-center .gauge-value {
+        font-size: 16px;
+      }
+
+      .battery-section .gauge-label {
+        display: none;
+      }
+
       #battery-level-bar {
         transition: transform 0.6s ease;
       }
@@ -474,6 +489,48 @@ class B2500DCard extends LitElement {
         width: 70px;
         height: 70px;
         isolation: isolate;
+      }
+
+      .solar-section {
+        display: none;
+      }
+
+      .house-section .gauge-wrapper {
+        width: 90px;
+        height: 90px;
+      }
+
+      .house-section .gauge-label {
+        display: none;
+      }
+
+      .house-section .gauge-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+      }
+
+      .house-section .solar-power-label {
+        color: #fbbf24;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .house-section .gauge-value-wrapper {
+        display: flex;
+        align-items: baseline;
+        gap: 3px;
+      }
+
+      .house-section .gauge-value {
+        font-size: 20px;
+      }
+
+      .house-section .gauge-unit {
+        font-size: 9px;
+        margin-top: 0;
       }
 
       .gauge-wrapper::before,
@@ -504,6 +561,15 @@ class B2500DCard extends LitElement {
         filter: none !important;
       }
 
+      .house-section .gauge-fill {
+        transition: stroke-dasharray 0.6s ease, stroke-dashoffset 0.6s ease, visibility 0s 0.6s;
+      }
+
+      #house-solar-gauge,
+      #house-battery-gauge {
+        stroke-width: 5;
+      }
+
       .gauge-center {
         position: absolute;
         top: 50%;
@@ -529,6 +595,7 @@ class B2500DCard extends LitElement {
       .gauge-percentage {
         color: rgba(255, 255, 255, 0.5);
         font-size: 9px;
+        margin-top: -4px;
       }
 
       .gauge-label {
@@ -548,6 +615,7 @@ class B2500DCard extends LitElement {
       .compact .right {
         display: flex;
         flex-direction: column;
+        margin-left: 24px;
         gap: 2px;
         flex: 1;
       }
@@ -556,7 +624,6 @@ class B2500DCard extends LitElement {
         font-weight: 600;
         font-size: 15px;
         color: white;
-        order: 2;
       }
 
       .compact .info-row {
@@ -566,21 +633,14 @@ class B2500DCard extends LitElement {
         gap: 8px;
         color: rgba(255, 255, 255, 0.9);
         font-size: 13px;
-        width: 100%;
-      }
-
-      .compact .info-row.flex-row:first-of-type {
-        order: 1;
-      }
-
-      .compact .info-row.flex-row:last-of-type {
-        order: 3;
       }
 
       .compact .info-item {
-        display: flex;
-        align-items: center;
+        display: grid;
+        grid-template-columns: 18px 1fr;
+        align-items: flex-start;
         gap: 6px;
+        width: 100%;
       }
 
       .compact ha-icon {
@@ -930,7 +990,7 @@ class B2500DCard extends LitElement {
           <!-- Battery Gauge - Vertical Bar -->
           <div class="battery-section">
             <div class="battery-bar-wrapper">
-              <svg class="battery-bar-svg" viewBox="0 0 70 100" preserveAspectRatio="xMidYMid meet">
+              <svg class="battery-bar-svg" viewBox="0 0 90 112" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <!-- Gradient for battery level (red at bottom → yellow → green at top) -->
                   <linearGradient id="battery-level-gradient" x1="0%" y1="100%" x2="0%" y2="0%">
@@ -941,16 +1001,16 @@ class B2500DCard extends LitElement {
                   </linearGradient>
                   <!-- Mask for battery fill -->
                   <mask id="battery-fill-mask">
-                    <rect x="20" y="15" width="30" height="70" fill="white" rx="3" />
+                    <rect x="30" y="18" width="30" height="78" fill="white" rx="3" />
                   </mask>
                 </defs>
 
                 <!-- Background bar -->
                 <rect
-                  x="20"
-                  y="15"
+                  x="30"
+                  y="18"
                   width="30"
-                  height="70"
+                  height="78"
                   fill="rgba(255,255,255,0.1)"
                   rx="3"
                   stroke="rgba(255,255,255,0.2)"
@@ -960,49 +1020,50 @@ class B2500DCard extends LitElement {
                 <!-- Battery level fill with gradient -->
                 <rect
                   id="battery-level-bar"
-                  x="20"
-                  y="15"
+                  x="30"
+                  y="18"
                   width="30"
-                  height="70"
+                  height="78"
                   fill="url(#battery-level-gradient)"
                   mask="url(#battery-fill-mask)"
-                  style="transform-origin: 35px 85px; transform: scaleY(${percent / 100})"
+                  style="transform-origin: 45px 96px; transform: scaleY(${percent / 100})"
                 />
 
                 <!-- Charging border (green, anti-clockwise from left of terminal) -->
                 <rect
                   id="battery-charging-border"
-                  x="15"
-                  y="10"
-                  width="40"
-                  height="80"
+                  x="24"
+                  y="12"
+                  width="42"
+                  height="88"
                   fill="none"
                   rx="5"
                   stroke="#10b981"
                   stroke-width="3"
                   opacity="${this._batteryPower > 50 ? 0.9 : 0}"
-                  style="stroke-dasharray: ${batteryPowerArc} 240; stroke-dashoffset: -25; transform: scaleX(-1); transform-origin: 35px 50px; transition: stroke-dasharray 0.5s ease, opacity 0.3s ease;"
+                  style="stroke-dasharray: ${batteryPowerArc} 260; stroke-dashoffset: -25; transform: scaleX(-1); transform-origin: 45px 56px; transition: stroke-dasharray 0.5s ease, opacity 0.3s ease;"
                 />
 
                 <!-- Discharging border (red, clockwise from right of terminal) -->
                 <rect
                   id="battery-discharging-border"
-                  x="15"
-                  y="10"
-                  width="40"
-                  height="80"
+                  x="24"
+                  y="12"
+                  width="42"
+                  height="88"
                   fill="none"
                   rx="5"
                   stroke="#ef4444"
                   stroke-width="3"
                   opacity="${this._batteryPower < -50 ? 0.9 : 0}"
-                  style="stroke-dasharray: ${batteryPowerArc} 240; stroke-dashoffset: -25; transition: stroke-dasharray 0.5s ease, opacity 0.3s ease;"
+                  style="stroke-dasharray: ${batteryPowerArc} 260; stroke-dashoffset: -25; transition: stroke-dasharray 0.5s ease, opacity 0.3s ease;"
                 />
 
                 <!-- Battery terminal on top -->
-                <rect x="28" y="8" width="14" height="4" fill="rgba(255,255,255,0.3)" rx="1.5" />
+                <rect x="37" y="10" width="16" height="4" fill="rgba(255,255,255,0.3)" rx="1.5" />
               </svg>
               <div class="battery-bar-center">
+                <div class="gauge-percentage">${percent}%</div>
                 <div class="gauge-value">${batteryDisplay.value}</div>
                 <div class="gauge-unit">${batteryDisplay.unit}</div>
               </div>
@@ -1060,6 +1121,7 @@ class B2500DCard extends LitElement {
                 <circle class="gauge-bg" cx="50" cy="50" r="39"></circle>
                 <!-- Outer circle: total house load -->
                 <circle
+                  id="house-total-gauge"
                   class="gauge-fill"
                   cx="50"
                   cy="50"
@@ -1068,6 +1130,7 @@ class B2500DCard extends LitElement {
                 ></circle>
                 <!-- Inner circle: solar contribution -->
                 <circle
+                  id="house-solar-gauge"
                   class="gauge-fill"
                   cx="50"
                   cy="50"
@@ -1079,6 +1142,7 @@ class B2500DCard extends LitElement {
                 ></circle>
                 <!-- Inner circle: battery contribution -->
                 <circle
+                  id="house-battery-gauge"
                   class="gauge-fill"
                   cx="50"
                   cy="50"
@@ -1090,8 +1154,11 @@ class B2500DCard extends LitElement {
                 ></circle>
               </svg>
               <div class="gauge-center">
-                <div class="gauge-value">${houseDisplay.value}</div>
-                <div class="gauge-unit">${houseDisplay.unit}</div>
+                <div class="solar-power-label">${solarDisplay.value} ${solarDisplay.unit}</div>
+                <div class="gauge-value-wrapper">
+                  <div class="gauge-value">${houseDisplay.value}</div>
+                  <div class="gauge-unit">${houseDisplay.unit}</div>
+                </div>
               </div>
             </div>
             <div class="gauge-label">House</div>
