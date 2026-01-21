@@ -66,7 +66,9 @@ class B2500DCard extends LitElement {
         border-radius: 18px;
         background: #68686a;
         background: linear-gradient(135deg, #68686a 0%, #48484a 45%, #5a5a5c 100%);
-        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.05), inset 0 -8px 16px rgba(0, 0, 0, 0.45);
+        box-shadow:
+          inset 0 2px 0 rgba(255, 255, 255, 0.05),
+          inset 0 -8px 16px rgba(0, 0, 0, 0.45);
         position: relative;
         display: flex;
         align-items: center;
@@ -461,7 +463,7 @@ class B2500DCard extends LitElement {
         left: 50%;
         transform: translate(-50%, -50%);
         text-align: center;
-        z-index: 10;
+        z-index: 1;
         pointer-events: none;
       }
 
@@ -557,12 +559,17 @@ class B2500DCard extends LitElement {
         fill: none;
         stroke-width: 8;
         stroke-linecap: round;
-        transition: stroke-dashoffset 0.5s ease, stroke 0.5s ease;
+        transition:
+          stroke-dashoffset 0.5s ease,
+          stroke 0.5s ease;
         filter: none !important;
       }
 
       .house-section .gauge-fill {
-        transition: stroke-dasharray 0.6s ease, stroke-dashoffset 0.6s ease, visibility 0s 0.6s;
+        transition:
+          stroke-dasharray 0.6s ease,
+          stroke-dashoffset 0.6s ease,
+          visibility 0s 0.6s;
       }
 
       #house-solar-gauge,
@@ -1473,7 +1480,7 @@ class B2500DCard extends LitElement {
                   }}
                 >
                   ${(entity.attributes?.options || []).map(
-                    (opt) => html`<mwc-list-item value=${opt}>${opt}</mwc-list-item>`
+                    (opt) => html`<mwc-list-item value=${opt}>${opt}</mwc-list-item>`,
                   )}
                 </ha-select>
               </div>
@@ -1529,14 +1536,15 @@ class B2500DCard extends LitElement {
                           }}
                         >
                           ${(selectEntity.attributes?.options || []).map(
-                            (opt) => html`<mwc-list-item value=${opt}>
-                              ${localize(
-                                opt === 'Simultaneous Charging/Discharging'
-                                  ? 'labels.simul_charge'
-                                  : 'labels.full_then_discharge',
-                                lang
-                              )}
-                            </mwc-list-item>`
+                            (opt) =>
+                              html`<mwc-list-item value=${opt}>
+                                ${localize(
+                                  opt === 'Simultaneous Charging/Discharging'
+                                    ? 'labels.simul_charge'
+                                    : 'labels.full_then_discharge',
+                                  lang,
+                                )}
+                              </mwc-list-item>`,
                           )}
                         </ha-select>
                       `
@@ -1630,8 +1638,8 @@ class B2500DCard extends LitElement {
         solar > grid && this._batteryPercent < 100
           ? 'charging'
           : grid > solar && this._batteryPercent > 0
-          ? 'discharging'
-          : '';
+            ? 'discharging'
+            : '';
     }
 
     if (this.config.compact) {
@@ -1743,7 +1751,7 @@ class B2500DCardEditor extends LitElement {
         detail: { config: this._config },
         bubbles: true,
         composed: true,
-      })
+      }),
     );
   }
 
