@@ -483,7 +483,7 @@ class B2500DCard extends LitElement {
       }
 
       #battery-level-bar {
-        transition: transform 0.6s ease;
+        transition: y 0.6s ease, height 0.6s ease;
       }
 
       .gauge-wrapper {
@@ -1000,7 +1000,7 @@ class B2500DCard extends LitElement {
               <svg class="battery-bar-svg" viewBox="0 0 90 112" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <!-- Gradient for battery level (red at bottom → yellow → green at top) -->
-                  <linearGradient id="battery-level-gradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <linearGradient id="battery-level-gradient" x1="45" y1="96" x2="45" y2="18" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
                     <stop offset="30%" style="stop-color:#f59e0b;stop-opacity:1" />
                     <stop offset="60%" style="stop-color:#eab308;stop-opacity:1" />
@@ -1024,16 +1024,15 @@ class B2500DCard extends LitElement {
                   stroke-width="1"
                 />
 
-                <!-- Battery level fill with gradient -->
+                <!-- Battery level fill with gradient (clips from bottom, showing only colors up to current level) -->
                 <rect
                   id="battery-level-bar"
                   x="30"
-                  y="18"
+                  y="${96 - 78 * percent / 100}"
                   width="30"
-                  height="78"
+                  height="${78 * percent / 100}"
                   fill="url(#battery-level-gradient)"
                   mask="url(#battery-fill-mask)"
-                  style="transform-origin: 45px 96px; transform: scaleY(${percent / 100})"
                 />
 
                 <!-- Charging border (green, anti-clockwise from left of terminal) -->
