@@ -1,18 +1,49 @@
 [![hacs][hacs-default]][hacs-default-link] [![hacs][hacs-validate]][hacs-validate-link]
 
-# B2500D-Card | The Solar Storage Card
+# Solar-Card | The Solar Storage Card
 
-A Home Assistant Custom Card for the Marstek B2500d storage system.
+A Home Assistant Custom Card for solar and battery systems.
 
-Since you can also define individual entities and options, this card is suitable for other storage systems as well!
+You can define individual entities and options, this card is suitable for all storage systems !
+
+<u>Compact Card:</u>
+Showing battery level and charging or discharging as border, and circle containing home load with associated solar input and battery if applicable for a simple view.
+
+![Example compact card](./examples/Kompakt.png)
 
 <u>Large Card:</u>
 
 ![Example card](./examples/Screenshot.png)
 
-<u>Compact Card:</u>
+---
 
-![Example card 2](./examples/Kompakt.png)
+## 🖥️ Manual Install / Update (without HACS)
+
+1. Build or download `battery-card.js` and place it at:
+
+   ```
+   /config/www/community/battery-card/battery-card.js
+   ```
+
+   You can use the **File Editor** add-on to create the file and paste the built source into it, then save.
+
+2. Go to **Settings → Dashboards**, open the **⋮ menu** (top right), and click **Resources**.
+
+3. **First time:** click **+ Add Resource**, set the URL to:
+
+   ```
+   /local/community/battery-card/battery-card.js
+   ```
+
+   and select **JavaScript Module**, then save.
+
+4. **After each update:** edit the existing resource and append a version suffix to bust the browser cache, e.g.:
+   ```
+   /local/community/battery-card/battery-card.js?v2.13
+   ```
+   Then click **Update** and refresh the page.
+
+---
 
 ## 🚀 Features
 
@@ -277,13 +308,6 @@ custom_settings:
 The configuration can also be done using the built-in form editor (visual editor).
 
 ![Visual Editor](./examples/visueller_Editor.png)
-
-## Home Assistant install / update
-
-Copy built js battery-card.js to /homeassistant/www/community/battery-card/battery-card.js
-Puis Paramètres -> Tableaux de Bord -> Resources -> /local/community/battery-card/battery-card.js?v1.N
-Refresh this version to be taken into account update HA
-Refresh page
 
 <!--BADGES-->
 
