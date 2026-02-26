@@ -1002,9 +1002,9 @@ class B2500DCard extends LitElement {
                   <!-- Gradient for battery level (red at bottom → yellow → green at top) -->
                   <linearGradient id="battery-level-gradient" x1="45" y1="96" x2="45" y2="18" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
-                    <stop offset="25%" style="stop-color:#f97316;stop-opacity:1" />
-                    <stop offset="50%" style="stop-color:#facc15;stop-opacity:1" />
-                    <stop offset="75%" style="stop-color:#a3e635;stop-opacity:1" />
+                    <stop offset="15%" style="stop-color:#f97316;stop-opacity:1" />
+                    <stop offset="35%" style="stop-color:#facc15;stop-opacity:1" />
+                    <stop offset="65%" style="stop-color:#a3e635;stop-opacity:1" />
                     <stop offset="100%" style="stop-color:#4ade80;stop-opacity:1" />
                   </linearGradient>
                   <!-- Mask for battery fill -->
