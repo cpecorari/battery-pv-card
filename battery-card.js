@@ -425,11 +425,14 @@ class B2500DCard extends LitElement {
         gap: 12px;
       }
 
-      .compact.surplus-glow,
-      .container.surplus-glow {
-        box-shadow: 0 0 18px 5px rgba(251, 191, 36, 0.55);
-        border-color: rgba(251, 191, 36, 0.5);
-        transition: box-shadow 0.5s ease, border-color 0.5s ease;
+      @keyframes surplusPulse {
+        0%, 100% { box-shadow: 0 0 10px 2px rgba(251, 191, 36, 0.3); }
+        50% { box-shadow: 0 0 28px 10px rgba(251, 191, 36, 0.75); }
+      }
+
+      :host(.surplus-glow) {
+        animation: surplusPulse 2.5s ease-in-out infinite;
+        border-radius: var(--ha-card-border-radius, 12px);
       }
 
       /* Gauges Section on Left */
@@ -813,11 +816,18 @@ class B2500DCard extends LitElement {
     }
     // Solar surplus entity (top-level config, works in both device and entities mode)
     if (this.config.solar_surplus) {
-      const surplusState = this._hass.states[this.config.solar_surplus]?.state;
-      this._solarSurplus = surplusState === 'on' || surplusState === 'true';
+      const val = this.config.solar_surplus;
+      // Support literal "on"/"true" for testing, or an entity ID
+      if (val === 'on' || val === 'true') {
+        this._solarSurplus = true;
+      } else {
+        const surplusState = this._hass.states[val]?.state;
+        this._solarSurplus = surplusState === 'on' || surplusState === 'true';
+      }
     } else {
       this._solarSurplus = false;
     }
+    this.classList.toggle('surplus-glow', this._solarSurplus);
 
     if (this._delayedValidation) {
       this._validateConfig(this.config);
@@ -1006,7 +1016,7 @@ class B2500DCard extends LitElement {
     const batteryArcLength = (batteryPercentageHouse / 100) * innerCircumference;
 
     return html`
-      <div class="compact ${this._solarSurplus ? 'surplus-glow' : ''}">
+      <div class="compact">
         <!-- Gauges Section -->
         <div class="gauges-section">
           <!-- Battery Gauge - Vertical Bar -->
@@ -1661,7 +1671,7 @@ class B2500DCard extends LitElement {
     }
 
     return html`
-      <div class="container ${this._solarSurplus ? 'surplus-glow' : ''}">
+      <div class="container">
         <div class="device">
           <!-- Header -->
           ${this._renderHeader(lang)}
