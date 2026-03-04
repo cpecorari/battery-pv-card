@@ -425,6 +425,13 @@ class B2500DCard extends LitElement {
         gap: 12px;
       }
 
+      .compact.surplus-glow,
+      .container.surplus-glow {
+        box-shadow: 0 0 18px 5px rgba(251, 191, 36, 0.55);
+        border-color: rgba(251, 191, 36, 0.5);
+        transition: box-shadow 0.5s ease, border-color 0.5s ease;
+      }
+
       /* Gauges Section on Left */
       .gauges-section {
         display: flex;
@@ -804,6 +811,14 @@ class B2500DCard extends LitElement {
         this.config.settings = false;
       }
     }
+    // Solar surplus entity (top-level config, works in both device and entities mode)
+    if (this.config.solar_surplus) {
+      const surplusState = this._hass.states[this.config.solar_surplus]?.state;
+      this._solarSurplus = surplusState === 'on' || surplusState === 'true';
+    } else {
+      this._solarSurplus = false;
+    }
+
     if (this._delayedValidation) {
       this._validateConfig(this.config);
       this._delayedValidation = false;
@@ -991,7 +1006,7 @@ class B2500DCard extends LitElement {
     const batteryArcLength = (batteryPercentageHouse / 100) * innerCircumference;
 
     return html`
-      <div class="compact">
+      <div class="compact ${this._solarSurplus ? 'surplus-glow' : ''}">
         <!-- Gauges Section -->
         <div class="gauges-section">
           <!-- Battery Gauge - Vertical Bar -->
@@ -1646,7 +1661,7 @@ class B2500DCard extends LitElement {
     }
 
     return html`
-      <div class="container">
+      <div class="container ${this._solarSurplus ? 'surplus-glow' : ''}">
         <div class="device">
           <!-- Header -->
           ${this._renderHeader(lang)}
@@ -1800,6 +1815,7 @@ class B2500DCardEditor extends LitElement {
           },
         },
       },
+      { name: 'solar_surplus', selector: { entity: {} } },
       { name: 'compact', selector: { boolean: {} } },
       { name: 'icon', selector: { boolean: {} } },
       { name: 'solar', selector: { boolean: {} } },

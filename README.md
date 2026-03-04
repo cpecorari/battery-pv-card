@@ -188,6 +188,7 @@ For the compact card, it’s enough to provide e.g. `battery_percentage`, `solar
 | `solar`            | boolean | Show solar card                                      | `true`                                |
 | `icon`             | boolean | Show storage icon                                    | `true`                                |
 | `compact`          | boolean | Show compact version                                 | `false`                               |
+| `solar_surplus`    | string  | Entity (boolean/switch) — card glows yellow when `on` (e.g. solar surplus active) | `null`  |
 | `max_input_power`  | number  | Maximum input power for scaling P1 bar               | `600`                                 |
 | `max_input_power2` | number  | Maximum input power for scaling P2 bar               | `600`                                 |
 | `max_input_power3` | number  | Maximum input power for scaling P3 bar               | `600`                                 |
