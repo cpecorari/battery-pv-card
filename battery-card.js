@@ -975,6 +975,18 @@ class B2500DCard extends LitElement {
     return sum / this._powerHistory.length;
   }
 
+  _getSolarHoursRemaining() {
+    if (!this._hass) return null;
+    const sun = this._hass.states['sun.sun'];
+    if (!sun?.attributes?.next_setting) return null;
+    const nextSetting = new Date(sun.attributes.next_setting);
+    const now = new Date();
+    // Subtract 1 hour — solar production drops off before actual sunset
+    const effectiveEnd = new Date(nextSetting.getTime() - 60 * 60 * 1000);
+    const hoursLeft = (effectiveEnd - now) / (1000 * 60 * 60);
+    return Math.max(0, hoursLeft);
+  }
+
   _getBatteryTimeRemaining() {
     const avgPower = this._getAverageBatteryPower();
     const percent = this._batteryPercent ?? 0;
@@ -982,13 +994,37 @@ class B2500DCard extends LitElement {
 
     if (capacityKwh <= 0 || Math.abs(avgPower) < 10) return null;
 
+    const solarHoursLeft = this._getSolarHoursRemaining();
+
     if (avgPower < -10) {
       // Discharging: time to reach min percentage
       const targetPercent = this.config.battery_min_percentage ?? 10;
       const remainingPercent = percent - targetPercent;
       if (remainingPercent <= 0) return { hours: 0, minutes: 0, label: 'empty' };
-      const remainingKwh = capacityKwh * (remainingPercent / 100);
+      let remainingKwh = capacityKwh * (remainingPercent / 100);
       const dischargePowerKw = Math.abs(avgPower) / 1000;
+
+      // Two-phase estimate: solar is currently offsetting home load.
+      // When solar stops, that load shifts to battery → faster drain.
+      if (solarHoursLeft !== null && solarHoursLeft > 0 && this._solarPower > 0) {
+        const solarToHome = Math.min(this._solarPower, this._housePower || 0) / 1000; // kW solar covering home
+        // Phase 1: current drain rate for remaining solar hours
+        const phase1Kwh = dischargePowerKw * solarHoursLeft;
+        if (phase1Kwh >= remainingKwh) {
+          // Battery empties before solar stops — simple calc
+          const hoursRemaining = remainingKwh / dischargePowerKw;
+          const totalMinutes = Math.round(hoursRemaining * 60);
+          return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60, label: 'discharge' };
+        }
+        // Phase 2: after solar, battery must also cover what solar was handling
+        const phase2Kwh = remainingKwh - phase1Kwh;
+        const postSolarDrainKw = dischargePowerKw + solarToHome;
+        const phase2Hours = postSolarDrainKw > 0 ? phase2Kwh / postSolarDrainKw : 0;
+        const hoursRemaining = solarHoursLeft + phase2Hours;
+        const totalMinutes = Math.round(hoursRemaining * 60);
+        return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60, label: 'discharge' };
+      }
+
       const hoursRemaining = remainingKwh / dischargePowerKw;
       const totalMinutes = Math.round(hoursRemaining * 60);
       return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60, label: 'discharge' };
@@ -998,7 +1034,16 @@ class B2500DCard extends LitElement {
       if (remainingPercent <= 0) return { hours: 0, minutes: 0, label: 'full' };
       const remainingKwh = capacityKwh * (remainingPercent / 100);
       const chargePowerKw = avgPower / 1000;
-      const hoursRemaining = remainingKwh / chargePowerKw;
+      let hoursRemaining = remainingKwh / chargePowerKw;
+
+      // If charging from solar, cap estimate to remaining solar hours
+      if (solarHoursLeft !== null && this._solarPower > 0) {
+        const solarShare = Math.min(this._solarPower, avgPower) / avgPower;
+        if (solarShare > 0.5 && hoursRemaining > solarHoursLeft) {
+          hoursRemaining = solarHoursLeft;
+        }
+      }
+
       const totalMinutes = Math.round(hoursRemaining * 60);
       return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60, label: 'charge' };
     }
@@ -1010,6 +1055,9 @@ class B2500DCard extends LitElement {
     if (!time) return '';
     if (time.label === 'empty') return `≤ ${this.config.battery_min_percentage ?? 10}%`;
     if (time.label === 'full') return 'Full';
+    if (time.hours >= 3) {
+      return `~${time.hours}h`;
+    }
     if (time.hours > 0) {
       return `~${time.hours}h ${time.minutes}m`;
     }
