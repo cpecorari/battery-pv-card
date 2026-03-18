@@ -421,18 +421,27 @@ class B2500DCard extends LitElement {
         border-style: solid;
         border-color: var(--ha-card-border-color, var(--divider-color, #e0e0e0));
         color: var(--primary-text-color);
-        padding: 12px 16px;
-        gap: 12px;
+        padding: 4px 4px;
+        gap: 26px;
       }
 
       @keyframes surplusPulse {
-        0%, 100% { box-shadow: 0 0 10px 2px rgba(251, 191, 36, 0.3); }
-        50% { box-shadow: 0 0 28px 10px rgba(251, 191, 36, 0.75); }
+        0%,
+        100% {
+          outline-color: rgba(251, 191, 36, 0.15);
+          filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.2));
+        }
+        50% {
+          outline-color: rgba(251, 191, 36, 0.9);
+          filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.85));
+        }
       }
 
       :host(.surplus-glow) {
-        animation: surplusPulse 2.5s ease-in-out infinite;
+        outline: 3px solid transparent;
+        outline-offset: 2px;
         border-radius: var(--ha-card-border-radius, 12px);
+        animation: surplusPulse 2.5s ease-in-out infinite;
       }
 
       /* Gauges Section on Left */
@@ -492,8 +501,34 @@ class B2500DCard extends LitElement {
         display: none;
       }
 
+      .battery-time-remaining {
+        font-size: 10px;
+        font-weight: 500;
+        text-align: center;
+        margin-top: 2px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.7);
+        white-space: nowrap;
+      }
+
+      .battery-time-remaining.discharge {
+        color: #fb923c;
+      }
+
+      .battery-time-remaining.charge {
+        color: #10b981;
+      }
+
+      .battery-time-remaining.empty {
+        color: #ef4444;
+      }
+
       #battery-level-bar {
-        transition: y 0.6s ease, height 0.6s ease;
+        transition:
+          y 0.6s ease,
+          height 0.6s ease;
       }
 
       .gauge-wrapper {
@@ -632,7 +667,7 @@ class B2500DCard extends LitElement {
       .compact .right {
         display: flex;
         flex-direction: column;
-        margin-left: 24px;
+        margin-left: 0;
         gap: 2px;
         flex: 1;
       }
@@ -687,6 +722,7 @@ class B2500DCard extends LitElement {
 
   constructor() {
     super();
+    this._powerHistory = []; // Rolling buffer for 1-minute average
   }
 
   setConfig(config) {
@@ -698,6 +734,7 @@ class B2500DCard extends LitElement {
       solar: true,
       compact: false,
       icon: true,
+      battery_min_percentage: 10,
       ...config,
     };
     if (this._hass) {
@@ -760,8 +797,15 @@ class B2500DCard extends LitElement {
       // Entities-Modus
       const e = this.config.entities;
 
-      const getNumericValue = (entity) => {
-        const stateObj = this._hass.states[entity];
+      const getNumericValue = (entityOrValue) => {
+        // Support raw numeric values (e.g. battery_capacity: 7000)
+        const raw = Number(entityOrValue);
+        if (!isNaN(raw) && !this._hass.states[entityOrValue]) {
+          // Raw number: treat as Wh, convert to kWh
+          return raw / 1000;
+        }
+
+        const stateObj = this._hass.states[entityOrValue];
         if (!stateObj) return 0;
 
         const value = Number(stateObj.state) || 0;
@@ -828,6 +872,13 @@ class B2500DCard extends LitElement {
       this._solarSurplus = false;
     }
     this.classList.toggle('surplus-glow', this._solarSurplus);
+
+    // Track battery power history for 1-minute rolling average
+    const now = Date.now();
+    this._powerHistory.push({ time: now, power: this._batteryPower || 0 });
+    // Remove entries older than 60 seconds
+    const cutoff = now - 60000;
+    this._powerHistory = this._powerHistory.filter((entry) => entry.time >= cutoff);
 
     if (this._delayedValidation) {
       this._validateConfig(this.config);
@@ -916,6 +967,53 @@ class B2500DCard extends LitElement {
       return { value: kw.toFixed(1), unit: 'kW' };
     }
     return { value: Math.round(watts).toString(), unit: 'W' };
+  }
+
+  _getAverageBatteryPower() {
+    if (!this._powerHistory || this._powerHistory.length < 2) return 0;
+    const sum = this._powerHistory.reduce((acc, entry) => acc + entry.power, 0);
+    return sum / this._powerHistory.length;
+  }
+
+  _getBatteryTimeRemaining() {
+    const avgPower = this._getAverageBatteryPower();
+    const percent = this._batteryPercent ?? 0;
+    const capacityKwh = this._batteryKwh || 0;
+
+    if (capacityKwh <= 0 || Math.abs(avgPower) < 10) return null;
+
+    if (avgPower < -10) {
+      // Discharging: time to reach min percentage
+      const targetPercent = this.config.battery_min_percentage ?? 10;
+      const remainingPercent = percent - targetPercent;
+      if (remainingPercent <= 0) return { hours: 0, minutes: 0, label: 'empty' };
+      const remainingKwh = capacityKwh * (remainingPercent / 100);
+      const dischargePowerKw = Math.abs(avgPower) / 1000;
+      const hoursRemaining = remainingKwh / dischargePowerKw;
+      const totalMinutes = Math.round(hoursRemaining * 60);
+      return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60, label: 'discharge' };
+    } else if (avgPower > 10) {
+      // Charging: time to reach 100%
+      const remainingPercent = 100 - percent;
+      if (remainingPercent <= 0) return { hours: 0, minutes: 0, label: 'full' };
+      const remainingKwh = capacityKwh * (remainingPercent / 100);
+      const chargePowerKw = avgPower / 1000;
+      const hoursRemaining = remainingKwh / chargePowerKw;
+      const totalMinutes = Math.round(hoursRemaining * 60);
+      return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60, label: 'charge' };
+    }
+
+    return null;
+  }
+
+  _formatTimeRemaining(time) {
+    if (!time) return '';
+    if (time.label === 'empty') return `≤ ${this.config.battery_min_percentage ?? 10}%`;
+    if (time.label === 'full') return 'Full';
+    if (time.hours > 0) {
+      return `~${time.hours}h ${time.minutes}m`;
+    }
+    return `~${time.minutes}m`;
   }
 
   //RENDER COMPACT
@@ -1025,7 +1123,14 @@ class B2500DCard extends LitElement {
               <svg class="battery-bar-svg" viewBox="0 0 90 112" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <!-- Gradient for battery level (red at bottom → yellow → green at top) -->
-                  <linearGradient id="battery-level-gradient" x1="45" y1="96" x2="45" y2="18" gradientUnits="userSpaceOnUse">
+                  <linearGradient
+                    id="battery-level-gradient"
+                    x1="45"
+                    y1="96"
+                    x2="45"
+                    y2="18"
+                    gradientUnits="userSpaceOnUse"
+                  >
                     <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
                     <stop offset="20%" style="stop-color:#f97316;stop-opacity:1" />
                     <stop offset="55%" style="stop-color:#84cc16;stop-opacity:1" />
@@ -1053,9 +1158,9 @@ class B2500DCard extends LitElement {
                 <rect
                   id="battery-level-bar"
                   x="30"
-                  y="${96 - 78 * percent / 100}"
+                  y="${96 - (78 * percent) / 100}"
                   width="30"
-                  height="${78 * percent / 100}"
+                  height="${(78 * percent) / 100}"
                   fill="url(#battery-level-gradient)"
                   mask="url(#battery-fill-mask)"
                 />
@@ -1103,6 +1208,13 @@ class B2500DCard extends LitElement {
               <div>Battery</div>
               <div class="gauge-percentage">${percent}%</div>
             </div>
+            ${this._getBatteryTimeRemaining()
+              ? html`
+                  <div class="battery-time-remaining ${this._getBatteryTimeRemaining()?.label || ''}">
+                    ${this._formatTimeRemaining(this._getBatteryTimeRemaining())}
+                  </div>
+                `
+              : ''}
           </div>
 
           <!-- Solar Gauge -->
@@ -1827,6 +1939,7 @@ class B2500DCardEditor extends LitElement {
       },
       { name: 'solar_surplus', selector: { entity: {} } },
       { name: 'compact', selector: { boolean: {} } },
+      { name: 'battery_min_percentage', selector: { number: { min: 0, max: 50, step: 1 } } },
       { name: 'icon', selector: { boolean: {} } },
       { name: 'solar', selector: { boolean: {} } },
       { name: 'output', selector: { boolean: {} } },
