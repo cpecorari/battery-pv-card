@@ -505,7 +505,7 @@ class B2500DCard extends LitElement {
         font-size: 10px;
         font-weight: 500;
         text-align: center;
-        margin-top: 2px;
+        margin-top: -6px;
         padding: 1px 6px;
         border-radius: 4px;
         background: rgba(255, 255, 255, 0.08);
