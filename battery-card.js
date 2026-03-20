@@ -971,8 +971,20 @@ class B2500DCard extends LitElement {
 
   _getAverageBatteryPower() {
     if (!this._powerHistory || this._powerHistory.length < 2) return 0;
-    const sum = this._powerHistory.reduce((acc, entry) => acc + entry.power, 0);
-    return sum / this._powerHistory.length;
+    // Exponential weighted average — recent readings count more.
+    // Half-life of ~15 seconds: readings 15s old have half the weight.
+    const now = this._powerHistory[this._powerHistory.length - 1].time;
+    const halfLife = 15000;
+    const decay = Math.LN2 / halfLife;
+    let weightedSum = 0;
+    let totalWeight = 0;
+    for (const entry of this._powerHistory) {
+      const age = now - entry.time;
+      const weight = Math.exp(-decay * age);
+      weightedSum += entry.power * weight;
+      totalWeight += weight;
+    }
+    return totalWeight > 0 ? weightedSum / totalWeight : 0;
   }
 
   _getSolarHoursRemaining() {
@@ -1119,9 +1131,9 @@ class B2500DCard extends LitElement {
       batteryPowerOffset = circumference;
     }
 
-    // Inner circle: battery percentage (green >10%, orange ≤10%)
+    // Inner circle: battery percentage color matches bar gradient thresholds
     const batteryPercentOffset = innerCircumference - (percent / 100) * innerCircumference;
-    const batteryPercentColor = percent > 10 ? '#10b981' : '#fb923c';
+    const batteryPercentColor = percent <= 10 ? '#ef4444' : percent <= 30 ? '#eab308' : '#10b981';
 
     // Solar gauge calculations
     const solarMaxPower = 4500;
@@ -1180,8 +1192,9 @@ class B2500DCard extends LitElement {
                     gradientUnits="userSpaceOnUse"
                   >
                     <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
-                    <stop offset="20%" style="stop-color:#f97316;stop-opacity:1" />
-                    <stop offset="55%" style="stop-color:#84cc16;stop-opacity:1" />
+                    <stop offset="10%" style="stop-color:#f97316;stop-opacity:1" />
+                    <stop offset="20%" style="stop-color:#eab308;stop-opacity:1" />
+                    <stop offset="30%" style="stop-color:#84cc16;stop-opacity:1" />
                     <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1" />
                   </linearGradient>
                   <!-- Mask for battery fill -->
