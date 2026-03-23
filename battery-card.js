@@ -790,6 +790,8 @@ class B2500DCard extends LitElement {
       this._batteryKwh = getState(`sensor.${device}_battery_capacity`) / 1000;
       this._batteryPower = getState(`sensor.${device}_battery_power`);
       this._productionToday = getState(`sensor.${device}_daily_pv_charging`) / 1000;
+      this._productionTodayRemaining = null;
+      this._productionTomorrow = null;
       this._batteryCharging = undefined; // Device mode uses power flow logic
       this._lastUpdate =
         this._formatLastUpdate(this._hass.states[`sensor.${this.config.device}_last_update`]?.state) || 'n/a';
@@ -850,6 +852,8 @@ class B2500DCard extends LitElement {
 
       this._batteryKwh = e.battery_capacity ? getNumericValue(e.battery_capacity) : 0;
       this._productionToday = e.production_today ? getNumericValue(e.production_today) : 0;
+      this._productionTodayRemaining = e.production_today_remaining ? getNumericValue(e.production_today_remaining) : null;
+      this._productionTomorrow = e.production_tomorrow ? getNumericValue(e.production_tomorrow) : null;
       this._lastUpdate = this._formatLastUpdate(this._hass.states[e.last_update]?.state) || 'n/a';
 
       if (this.config.custom_settings?.length) {
@@ -916,6 +920,8 @@ class B2500DCard extends LitElement {
       house_power: 'house_power',
       last_update: 'last_update',
       storage_status: 'storage_status',
+      production_today_remaining: 'production_today_remaining',
+      production_tomorrow: 'production_tomorrow',
     };
 
     if (this.config.device) {
@@ -1371,70 +1377,137 @@ class B2500DCard extends LitElement {
 
         <!-- Right Section -->
         <div class="right">
-          <!-- Solar and Battery (first row) -->
-          <div class="info-row flex-row">
-            <div
-              class="info-item"
-              @click=${() => {
-                const entityId = this._getEntity('solar_power');
-                if (entityId) this._handleMoreInfo(entityId);
-              }}
-            >
-              <ha-icon icon="mdi:weather-sunny" style="color: #fbbf24"></ha-icon>
-              <span class="value"
-                >${this._formatPowerWithUnit(this._solarPower).value}
-                ${this._formatPowerWithUnit(this._solarPower).unit}</span
-              >
-            </div>
+          ${this._productionTodayRemaining !== null || this._productionTomorrow !== null
+            ? html`
+                <!-- Production forecast (first row) -->
+                <div class="info-row flex-row">
+                  ${this._productionTodayRemaining !== null
+                    ? html`
+                        <div
+                          class="info-item"
+                          @click=${() => {
+                            const entityId = this._getEntity('production_today_remaining');
+                            if (entityId) this._handleMoreInfo(entityId);
+                          }}
+                        >
+                          <ha-icon icon="mdi:sun-clock" style="color: #fb923c"></ha-icon>
+                          <span class="value">${this._productionTodayRemaining.toFixed(1)} kWh</span>
+                        </div>
+                      `
+                    : ''}
+                  ${this._productionTomorrow !== null
+                    ? html`
+                        <div
+                          class="info-item"
+                          @click=${() => {
+                            const entityId = this._getEntity('production_tomorrow');
+                            if (entityId) this._handleMoreInfo(entityId);
+                          }}
+                        >
+                          <ha-icon icon="mdi:weather-sunny-alert" style="color: #a78bfa"></ha-icon>
+                          <span class="value">${this._productionTomorrow.toFixed(1)} kWh</span>
+                        </div>
+                      `
+                    : ''}
+                </div>
 
-            <div
-              class="info-item"
-              @click=${() => {
-                const entityId = this._getEntity('battery_power');
-                if (entityId) this._handleMoreInfo(entityId);
-              }}
-            >
-              <ha-icon icon="mdi:battery" style="color: #60a5fa"></ha-icon>
-              <span class="value"
-                >${this._formatPowerWithUnit(this._batteryPower).value}
-                ${this._formatPowerWithUnit(this._batteryPower).unit}</span
-              >
-            </div>
-          </div>
+                <!-- Card Name -->
+                <div class="card-name">${this.config.name || this.config.device}</div>
 
-          <!-- Card Name -->
-          <div class="card-name">${this.config.name || this.config.device}</div>
+                <!-- Production today and Grid -->
+                <div class="info-row flex-row">
+                  <div
+                    class="info-item"
+                    @click=${() => {
+                      const entityId = this._getEntity('daily_pv_charging');
+                      if (entityId) this._handleMoreInfo(entityId);
+                    }}
+                  >
+                    <ha-icon icon="mdi:solar-power" style="color: #fbbf24"></ha-icon>
+                    <span class="value">${this._productionToday.toFixed(1)} kWh</span>
+                  </div>
 
-          <!-- House and Grid -->
-          <div class="info-row flex-row">
-            <div
-              class="info-item"
-              @click=${() => {
-                const entityId = this._getEntity('house_power');
-                if (entityId) this._handleMoreInfo(entityId);
-              }}
-            >
-              <ha-icon icon="mdi:home-lightning-bolt-outline" style="color: #10b981"></ha-icon>
-              <span class="value"
-                >${this._formatPowerWithUnit(this._housePower).value}
-                ${this._formatPowerWithUnit(this._housePower).unit}</span
-              >
-            </div>
+                  <div
+                    class="info-item"
+                    @click=${() => {
+                      const entityId = this._getEntity('grid_power');
+                      if (entityId) this._handleMoreInfo(entityId);
+                    }}
+                  >
+                    <ha-icon icon="mdi:transmission-tower" style="color: #ef4444"></ha-icon>
+                    <span class="value"
+                      >${this._formatPowerWithUnit(this._gridPower).value}
+                      ${this._formatPowerWithUnit(this._gridPower).unit}</span
+                    >
+                  </div>
+                </div>
+              `
+            : html`
+                <!-- Solar and Battery (first row) -->
+                <div class="info-row flex-row">
+                  <div
+                    class="info-item"
+                    @click=${() => {
+                      const entityId = this._getEntity('solar_power');
+                      if (entityId) this._handleMoreInfo(entityId);
+                    }}
+                  >
+                    <ha-icon icon="mdi:weather-sunny" style="color: #fbbf24"></ha-icon>
+                    <span class="value"
+                      >${this._formatPowerWithUnit(this._solarPower).value}
+                      ${this._formatPowerWithUnit(this._solarPower).unit}</span
+                    >
+                  </div>
 
-            <div
-              class="info-item"
-              @click=${() => {
-                const entityId = this._getEntity('grid_power');
-                if (entityId) this._handleMoreInfo(entityId);
-              }}
-            >
-              <ha-icon icon="mdi:transmission-tower" style="color: #ef4444"></ha-icon>
-              <span class="value"
-                >${this._formatPowerWithUnit(this._gridPower).value}
-                ${this._formatPowerWithUnit(this._gridPower).unit}</span
-              >
-            </div>
-          </div>
+                  <div
+                    class="info-item"
+                    @click=${() => {
+                      const entityId = this._getEntity('battery_power');
+                      if (entityId) this._handleMoreInfo(entityId);
+                    }}
+                  >
+                    <ha-icon icon="mdi:battery" style="color: #60a5fa"></ha-icon>
+                    <span class="value"
+                      >${this._formatPowerWithUnit(this._batteryPower).value}
+                      ${this._formatPowerWithUnit(this._batteryPower).unit}</span
+                    >
+                  </div>
+                </div>
+
+                <!-- Card Name -->
+                <div class="card-name">${this.config.name || this.config.device}</div>
+
+                <!-- House and Grid -->
+                <div class="info-row flex-row">
+                  <div
+                    class="info-item"
+                    @click=${() => {
+                      const entityId = this._getEntity('house_power');
+                      if (entityId) this._handleMoreInfo(entityId);
+                    }}
+                  >
+                    <ha-icon icon="mdi:home-lightning-bolt-outline" style="color: #10b981"></ha-icon>
+                    <span class="value"
+                      >${this._formatPowerWithUnit(this._housePower).value}
+                      ${this._formatPowerWithUnit(this._housePower).unit}</span
+                    >
+                  </div>
+
+                  <div
+                    class="info-item"
+                    @click=${() => {
+                      const entityId = this._getEntity('grid_power');
+                      if (entityId) this._handleMoreInfo(entityId);
+                    }}
+                  >
+                    <ha-icon icon="mdi:transmission-tower" style="color: #ef4444"></ha-icon>
+                    <span class="value"
+                      >${this._formatPowerWithUnit(this._gridPower).value}
+                      ${this._formatPowerWithUnit(this._gridPower).unit}</span
+                    >
+                  </div>
+                </div>
+              `}
         </div>
       </div>
     `;
@@ -1920,6 +1993,8 @@ class B2500DCardEditor extends LitElement {
         p2_power: '',
         output_power: '',
         production_today: '',
+        production_today_remaining: '',
+        production_tomorrow: '',
       },
       ...config,
     };
@@ -1982,6 +2057,8 @@ class B2500DCardEditor extends LitElement {
               p2_power: { selector: { entity: {} } },
               output_power: { selector: { entity: {} } },
               production_today: { selector: { entity: {} } },
+              production_today_remaining: { selector: { entity: {} } },
+              production_tomorrow: { selector: { entity: {} } },
             },
           },
         },
