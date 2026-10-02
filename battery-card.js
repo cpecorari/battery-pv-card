@@ -1147,6 +1147,14 @@ class B2500DCard extends LitElement {
     const solarOffset = circumference - (solarPercentage / 100) * circumference;
     const solarDisplay = formatGaugeValue(this._solarPower);
 
+    // Solar charging the battery (from solar excess after covering house)
+    let solarToBattery = 0;
+    if (this._batteryPower > 0) {
+      const houseFromSolar = this._solarPower > 0 ? Math.min(this._solarPower, this._housePower) : 0;
+      const solarExcess = Math.max(0, this._solarPower - houseFromSolar);
+      solarToBattery = Math.min(this._batteryPower, solarExcess);
+    }
+
     // House gauge calculations - total and contributions
     const maxHouseLoad = 6000;
     const houseDisplay = formatGaugeValue(this._housePower);
@@ -1172,6 +1180,34 @@ class B2500DCard extends LitElement {
 
     const totalPercentage = Math.min((this._housePower / maxHouseLoad) * 100, 100);
     const totalArcLength = (totalPercentage / 100) * circumference;
+
+    // Battery charge arc, drawn as a continuation of the house-load arc (same outer ring & scale).
+    // Rendered as discreet diagonal ticks instead of a solid stroke, so it reads differently
+    // from the solid green battery-discharge arc. Each tick is slanted relative to its own
+    // radius, so the hatching rotates with the arc and always points toward the center.
+    const batteryChargePercentage = Math.min((solarToBattery / maxHouseLoad) * 100, 100 - totalPercentage);
+    const batteryChargeArcLength = (batteryChargePercentage / 100) * circumference;
+
+    let batteryChargeTicksPath = '';
+    if (solarToBattery > 0 && batteryChargeArcLength > 0) {
+      const tickSpacing = 4.5; // arc length between ticks, at r=47
+      const tickInnerRadius = 44;
+      const tickOuterRadius = 50;
+      const tickSlant = 3 / radius; // angular lean: outer end trails the inner end
+      const startAngle = (totalArcLength / circumference) * 2 * Math.PI;
+      const inset = 1.5; // keep ticks clear of the arc ends
+      const usableLength = batteryChargeArcLength - 2 * inset;
+      const tickCount = Math.max(1, Math.floor(usableLength / tickSpacing) + 1);
+      for (let i = 0; i < tickCount; i++) {
+        const s = tickCount === 1 ? batteryChargeArcLength / 2 : inset + (usableLength * i) / (tickCount - 1);
+        const angle = startAngle + s / radius;
+        const x1 = 50 + tickInnerRadius * Math.cos(angle);
+        const y1 = 50 + tickInnerRadius * Math.sin(angle);
+        const x2 = 50 + tickOuterRadius * Math.cos(angle + tickSlant);
+        const y2 = 50 + tickOuterRadius * Math.sin(angle + tickSlant);
+        batteryChargeTicksPath += `M ${x1.toFixed(2)} ${y1.toFixed(2)} L ${x2.toFixed(2)} ${y2.toFixed(2)} `;
+      }
+    }
 
     // Solar arc can exceed house load inner circle
     const solarPercentageHouse = (solarToHouse / maxHouseLoad) * 100;
@@ -1338,6 +1374,17 @@ class B2500DCard extends LitElement {
                   r="47"
                   style="stroke: url(#house-gradient); stroke-dasharray: ${totalArcLength} ${circumference}; stroke-dashoffset: 0;"
                 ></circle>
+                <!-- Outer circle: solar charging battery, continuing the house-load arc (diagonal ticks) -->
+                <path
+                  id="house-battery-charge-gauge"
+                  d="${batteryChargeTicksPath}"
+                  fill="none"
+                  stroke="#10b981"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  opacity="0.85"
+                  style="visibility: ${solarToBattery > 0 ? 'visible' : 'hidden'};"
+                ></path>
                 <!-- Inner circle: solar contribution -->
                 <circle
                   id="house-solar-gauge"
